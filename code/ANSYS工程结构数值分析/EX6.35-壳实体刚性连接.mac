@@ -1,0 +1,52 @@
+! EX6.35-壳与3D实体刚性连接，P400
+finish
+/clear
+/prep7
+h = 2.4
+b = 2.0
+l1 = 1.8
+l2 = 3.0
+t = 0.3
+q1 = 10000
+q2 = 50000  ! 面荷载
+et, 1, solid95
+et, 2, shell93
+mp, ex, 1, 3.0e10
+mp, prxy, 1, 0.2
+r, 1, t
+blc4,,, b, h, l1
+wpoffs,, h-t/2, l1
+wprota,, 90
+vsbw, all
+blc4,,, b, l2
+nummrg, all ! 创建面，粘结图素
+vatt, 1,, 1
+esize, t/2
+vmesh, all
+asel, s, loc, z, l1+t, l1+l2
+aatt, 1, 1, 2
+amesh, all
+sfa, all, 1, pres, q1   ! 面荷载 Q1
+lsla, s
+lsel, r, loc, x, b
+sfl, all, pres, q2*t    ! 线荷载 Q2×T
+asel, s, loc, y, 0
+da, all, all
+allsel, all ! 选择面，施加约束
+nsel, s, loc, z, l1
+nsel, r, loc, y, h-t, h
+cm, nodcm, node
+*do, i, 1, 29
+    cmsel, s, nodcm
+    nsel, r, loc, x, nx(i)
+    cerig, i, all, ux, uz
+*enddo
+allsel, all
+! 求解
+/solu
+solve
+/post1
+pldisp, 1
+
+
+

@@ -1,0 +1,83 @@
+! EX8.18 周边简支板的大挠度分析 P466
+! 四边简支形式, 中点连线x-y，左右周边线的z约束
+finish
+/clear
+/filname, ex818
+/prep7
+a = 200
+b = 40
+t = 2
+e = 2.1e5
+bc = 0.3
+pi = acos(-1)
+! 弹性屈曲荷载σcr的理论公式
+sigcr = pi*pi*e/(3*(1-bc*bc))*(t/b)**2
+et, 1, shell63
+mp, ex, 1, e
+mp, prxy, 1, bc
+r, 1, t
+blc5,,, a, b    ! 根据中心点绘制矩形
+! 切分为4个面，便于施加约束
+wprota,,, 90
+asbw, all
+wprota,, 90
+asbw, all
+wpcsys, -1
+esize, 5
+mshape, 0
+mshkey, 1
+amesh, all
+
+! 求解设定
+/solu
+lsel, s, loc, x, -a/2
+lsel, a, loc, x, a/2
+sfl, all, pres, sigcr*t
+lsel, s, loc, x, 0
+dl, all,, ux    ! y对称轴上的约束
+lsel, s, loc, y, 0
+dl, all,, uy    ! x对称轴上的约束
+! 周边z向约束
+lsel, all
+lsel, u, loc, x, 0
+lsel, u, loc, y, 0
+dl, all,, uz
+allsel, all
+pstres, on  ! 打开预应力开关
+solve
+finish
+
+! 特征值屈曲分析
+/solu
+antype, 1
+bucopt, lanb, 2
+mxpand, 2
+solve
+finish
+! 施加初始缺陷
+/prep7
+upgeom, 0.01, 1, 1, ex818, rst
+finish
+
+! 静力分析求解
+/solu
+antype, 0
+nlgeom, 1
+nsubst, 60
+arclen, 1   ! 激活弧长法
+outres, all, all
+sfldele, all, all
+lsel, s, loc, x, -a/2
+lsel, a, loc, x, a/2
+sfl, all, pres, sigcr*t*1.3 !(1.2-1.5)此处为1.3倍的屈曲荷载
+lsel, all
+solve   ! 注意对于本例子，仅激活弧长法无法收敛
+finish
+
+! 后处理
+/post26
+node1 = node(0, 0, 0)
+nsol, 2, node1, u, z
+prod, 3, 1,,,,,, sigcr*1.3  ! 时间变量乘以施加的总荷载
+xvar, 2
+plvar, 3

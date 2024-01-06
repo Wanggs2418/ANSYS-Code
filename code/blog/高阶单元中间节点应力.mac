@@ -1,0 +1,24 @@
+! https://www.fangzhenxiu.com/post/1870404/
+
+FINISH$/CLEAR$/PREP7
+
+ET,1,SOLID186
+
+MP,EX,1,2E5$MP,PRXY,1,0.3
+
+BLC4,,,10,20,200
+
+ESIZE,5$MSHKEY,1$VMESH,ALL
+
+DA,1,ALL$SFA,4,1,PRES,0.1
+
+/SOLU$SOLVE$/POST1
+
+!打开节点编号和精细化显示
+
+/PNUM,NODE,1
+/EFACET,2   ! 显示中间节点的值
+
+!显示单元和节点应力列表
+
+EPLOT$PRNSOL,S

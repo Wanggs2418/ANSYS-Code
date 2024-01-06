@@ -1,0 +1,99 @@
+! EX8.20-单悬索直接迭代求解 P469
+! 直接迭代法
+finish
+/clear
+/filname, ex820
+/prep7
+! 定义材料的性质
+l0 = 120
+xh = 20
+area = 7.016e-4
+em = 7.89e10
+q0 = 65 ! 悬索单位重量 (N/m)
+qf = 10000  ! 悬索集中荷载 (N)
+h0 = 9000   ! 自重下的水平张力(已知)
+! 迭代条件，单元数目，初应变
+err0 = 1/1000
+enum = 60
+istran = 1.0e-6
+et, 1, link10
+r, 1, area, istran
+mp, ex, 1, em
+mp, prxy, 1, 0.3
+mp, dens, 1, q0/area    ! 换算密度 N/m3
+
+! 创建模型
+k, 1
+k, 2, l0, -xh
+l, 1, 2
+lesize, all,,, enum
+lmesh, all
+d, node(0, 0, 0), all
+d, node(l0, -xh, 0), all
+node1 = nelem(enum/2, 1)    ! 获得中间单元的两个节点号
+node2 = nelem(enum/2, 2)
+acel,, 1.0  ! 施加值为1的加速度
+finish
+
+! 求解
+pass1 = 1
+*dowhile, pass1
+    /solu
+    antype, 0
+    nlgeom, on
+    sstif, on
+    nsubst, 20
+    outres, all, all
+    solve
+    finish
+    /post1
+    set, last, last
+    *get, nfor, elem, enum/2, smisc, 1  ! 获得单元索力并计算余弦
+    cosref = (nx(node2) - nx(node1))/distnd(node1, node2)
+    nfor = nfor*abs(cosref) ! 跨中单元水平张力
+    err1 = abs(nfor-h0)/h0  ! 当前索水平张力误差
+    finish
+    /prep7
+    ! 误差小于0.05,更新系数采用较小的值
+    *if, err1, lt, 0.05, then
+        upgeom, 0.1, last, last, ex820, rst
+    *else
+        upgeom, 1, last, last, ex820, rst
+    *endif
+    *if, err1, lt, err0, exit
+*enddo
+
+! 获得初始状态索长，无应力索长
+/post1
+set, last, last
+plesol, smisc, 1    ! 绘制索力
+etable, epelt, lepel, 1
+s = 0
+ds = 0
+*do, i, 1, enum
+    *get, eleng, elem, i, leng  ! 获取单元的长度
+    *get, epel, elem, i, etab, epelt
+    s = s+eleng
+    ds = ds+eleng*epel  ! 计算索长和索的变形
+*enddo
+s0 = s-ds
+
+! 前述计算为索在自重荷载状况下的初始变形
+! 求解外荷载作用下的内力和变形
+/solu
+nlgeom, on
+nsubst, 20
+outres, all, all
+f, node1, fy, -qf
+solve
+finish
+
+
+
+
+
+
+
+
+
+

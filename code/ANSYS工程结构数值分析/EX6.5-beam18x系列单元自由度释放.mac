@@ -1,0 +1,58 @@
+! Ex6.5 BEAM189 自由度释放,P352
+finish
+/clear
+/prep7
+et, 1, beam189
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+sectype, 1, beam189, csolid
+secdata, 0.05   !梁截面数据，r = 0.05
+k, 1
+k, 2, 0, 4
+k, 3, 3
+k, 4, 3, 4
+k, 5, 3, 7
+k, 6, 6, 4
+k, 7, 6, 7
+k, 8, 9, 7
+k, 100, -10, 110    !定位点
+! 创建线
+l, 1, 2
+l, 3, 4
+l, 4, 5
+l, 2, 4
+l, 6, 7
+l, 5, 7
+l, 7, 8
+dk, 1, all
+dk, 3, all
+dk, 6, all
+dk, 8, ux,,,, uy
+latt, 1,, 1,, 100,, 1
+lesize, all,,, 9
+lmesh, all
+! 施加单元荷载
+lsel, s, loc, y, 4
+esll
+sfbeam, all, 1, pres, 2000
+lsel, s, loc, y, 7
+esll
+sfbeam, all, 1, pres, 3000
+! 释放约束
+lsel, s,,, 1, 4, 3
+esll
+endrelease,,, ux
+lsel, s,,, 5, 7
+esll
+endrelease,,, rotz
+allsel
+! cplist
+finish
+/solu
+solve
+finish
+/post1
+pldisp, 1
+etable, mi, smisc, 2
+etable, mj, smisc, 15
+plls, mi, mj

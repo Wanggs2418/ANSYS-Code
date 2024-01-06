@@ -1,0 +1,98 @@
+! EX10.4-轴和盘的过盈装配 P398
+! 创建1/4模型分析，二者过盈量为-0.09,过盈量很小，侵入容差以绝对值的方式设置
+finish
+/clear
+/prep7
+ar1 = 30
+ar2 = 20
+pr1 = 110
+pr2 = 30
+l1 = 20
+l2 = 20
+l3 = 80
+infe = 0.045    ! 过盈量
+et, 1, solid95
+et, 2, conta174
+et, 3, targe170
+keyopt, 2, 9, 4 ! 考虑渐变效应，仅包括偏移
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+mp, mu, 2, 0.2
+r, 1
+r, 2,,, 1, -0.001   ! fkn=1,ftoln=-0.001
+rmodif, 2, 10, infe ! conf=infe=0.045
+
+! 创建几何模型
+/view, 1, 1, 1, 1
+cyl4, 0, 0, pr2, 90, pr1, 180, l2
+cyl4, 0, 0, ar2, 90, ar1, 180, l1+l2+l3
+vgen,, 2,,,,, -l1,,, 1
+vatt, 1, 1, 1
+lsel, s, length,, l1
+lesize, all,,, 4
+lsel, s, length,, ar1-ar2
+lesize, all,,, 2
+lsel, all
+mshkey, 1
+vsel, s,,, 1
+esize, 20
+vmesh, 1
+vsel, s,,, 2
+esize, 4
+vmesh, 2
+vsel, all
+csys, 1
+
+! 接触单元与目标单元
+nsel, s, loc, x, ar1
+real, 2
+type, 2 ! 接触单元conta174
+mat, 2
+esurf
+nsel, s, loc, x, pr2
+type, 3
+esurf
+nsel, all
+asel, s, loc, y, 90
+da, all, symm   ! 90面上施加对称约束
+asel, s, loc, y, 180
+da, all, symm
+asel, s, loc, x, pr1
+da, all, all    ! 圆盘外表面施加约束
+allsel, all
+
+! 求解设置
+/solu
+nlgeom, on
+outres, all, all
+time, 1
+nsubst, 10
+solve
+! 施加位移约束，将轴拔出
+time, 2
+asel, s, loc, z, l2+L3
+da, all, uz, 50
+nsubst, 200,, 50
+allsel, all
+solve
+
+! 后处理设置
+/post1
+set, 1, last
+plnsol, s, eqv
+esel, s, type,, 2
+plnsol, cont, pres
+plnsol, cont, pene
+plnsol, cont, stat
+plnsol, cont, gap
+esel, all
+! 扩展结果
+/expand, 3, polar,,, 90 ! 重复3次
+set, 2, last
+plnsol, s, eqv
+antime, 50, 0.2,, 1, 2, 1, 2
+finish
+
+
+
+

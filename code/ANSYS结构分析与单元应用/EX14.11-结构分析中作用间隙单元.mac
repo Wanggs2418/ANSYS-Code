@@ -1,0 +1,48 @@
+! EX14.11 结构分析中用作间隙单元,P517
+finish
+/clear
+/prep7
+l = 10
+det = 0.002
+et, 1, beam189
+et, 2, mpc184, 8    !滑槽连接单元
+sectype, 1, beam, ctube
+secdata, 0.01, 0.012    ! 圆环内外径Ri, Ro, N(单元数)
+mp, ex, 1, 7.8e10
+mp, prxy, 1, 0.0
+
+! 创建几何模型，划分BEAM189单元网格
+k, 1
+k, 2,, l
+k, 3,, 2*l
+l, 1, 2
+l, 2, 3
+latt, 1,, 1,,,, 1
+esize, 1
+lmesh, all
+n1 = node(0, 0, 0)
+n2 = node(0, l, 0)
+n3 = node(0, 2*l, 0)
+
+! 创建滑槽单元，施加约束
+local, 12,,,,, 90
+sectype, 2, joint, slot
+secjoint, lsys, 12
+seclock, ux, det
+type, 2
+secnum, 2
+e, 1
+d, n3, all
+f, n2, fy, -1e4
+
+! 求解
+/solu
+nlgeom, on
+nsubst, 10
+time, 1
+solve
+
+! 后处理
+/post1
+plnsol, u, sum
+antime, 50, 0.2

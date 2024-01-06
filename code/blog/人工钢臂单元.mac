@@ -1,0 +1,100 @@
+! https://www.fangzhenxiu.com/post/1876004/
+! 1.采用采用MPC184(K1=1)梁单元
+! 2.人工刚臂就是采用普通单元，赋予其很大的刚度，可采用提高弹性模量方法
+! 注意：人工刚臂的刚度提升值有限，达到一定数值（如1E15）程序不再求解，极大主元造成了病态刚度矩阵
+!人工刚臂单元命令流
+
+FINISH$/CLEAR$/PREP7
+
+!BC为刚度长度，保持两个工字钢各自的质心轴。LINE的创建全部在质心轴。
+
+BC=0.15$K,1$K,2,1.5$K,3,3
+
+K,4,1.5,BC$K,5,1.5,BC,1.6
+
+L,1,2$L,2,3$L,2,4$L,4,5
+
+ET,1,BEAM189$MP,EX,1,2.1E11
+
+MP,PRXY,1,0.3
+
+!刚度系数-提高弹性模量
+
+GDXS=1E14
+
+MP,EX,2,2.1E11*GDXS$MP,PRXY,2,0.3
+
+SECTYPE,1,BEAM,I!
+
+SECDATA,0.4,0.4,0.7,0.03,0.03,0.024
+
+SECTYPE,2,BEAM,I!
+
+SECDATA,0.4,0.4,0.4,0.02,0.02,0.012
+
+LSEL,S,LOC,Y,0  ! 主工字形体
+LATT,1,,1,,,4,1 ! mp-1, type-1, sec-1
+
+LSEL,S,LOC,Y,BC ! 从工字形体
+LATT,1,,1,,,2,2 ! mp-1
+
+LSEL,S,LOC,Y,BC/2   ! 连接的人工钢臂
+LATT,2,,1,,,5,1
+/trlcy,elem,1
+/trlcy,elem,0
+
+LSEL,ALL$ESIZE,0.2
+LMESH,ALL
+
+DK,1,ALL$DK,3,ALL$DK,5,UZ
+
+DK,5,ROTX$FK,5,FY,-4E5
+
+
+/SOLU$SOLVE
+
+/POST1$PLNSOL,U,Y
+
+/ESHAPE,1$PLNSOL,S,X
+
+!截面偏置命令流
+
+!创建的LINE全部位于同一平面内
+
+FINISH$/CLEAR$/PREP7$K,1
+
+K,2,1.5$K,3,3$K,4,1.5,,1.6
+
+K,5,1.5,1,0$L,1,2$L,2,3$L,2,4
+
+ET,1,BEAM189
+
+MP,EX,1,2.1E11$MP,PRXY,1,0.3
+
+SECTYPE,1,BEAM,I
+
+SECDATA,0.40,0.40,0.7,0.03,0.03,0.024
+
+!截面2设置偏置，即不在缺省的质心位置
+
+SECTYPE,2,BEAM,I
+
+SECOFFST,USER,0,0.05
+
+SECDATA,0.40,0.40,0.4,0.02,0.02,0.012
+
+LSEL,S,LOC,Z,0$LATT,1,,1,,,5,1
+
+LSEL,INVE$LATT,1,,1,,,5,2
+
+LSEL,ALL$ESIZE,0.20$LMESH,ALL
+
+DK,1,ALL$DK,3,ALL$DK,4,UZ
+
+DK,4,ROTX$FK,4,FY,-4E5
+
+/SOLU$SOLVE$FINISH
+
+/POST1$PLNSOL,U,Y!
+
+/ESHAPE,1$PLNSOL,S,X!

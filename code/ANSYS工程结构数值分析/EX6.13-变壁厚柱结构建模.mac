@@ -1,0 +1,37 @@
+! EX6.13-变壁厚柱结构建模,P371
+! 1/4 模型
+finish
+/clear
+/prep7
+a = 6
+b = 8
+h = 15
+t1 = 0.8
+t2 = 0.3
+! 创建中面的点
+et, 1, shell93
+k, 1, b/2-ct1/2
+k, 2, b/2-t1/2, a/2-t1/2
+k, 3, 0, a/2-t1/2
+k, 4, b/2-t2/2,, h
+k, 5, b/2-t2/2, a/2-t2/2, h
+k, 6, 0, a/2-t2/2, h
+a, 1, 2, 5, 4
+a, 2, 3, 6, 5   ! 创建几何面
+
+! 划分单元
+esize, 0.5
+mshkey, 1
+amesh, all
+*get, nodemax, node,, count ! 节点总数
+*dim, thick,, nodemax
+*do, i, 1, nodemax  ! 循环生成各节点厚度
+    thick(i) = t1-(t1-t2)/h*nz(i)
+*enddo
+rthick, thick(1)
+/eshape, 1
+/view, 1, 1, 1, 1
+/angle, 1, -120, zs, 1
+/angle, 1, 180, ys, 1
+/angle, 1, 60, xs, 1
+eplot

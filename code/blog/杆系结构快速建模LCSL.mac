@@ -1,0 +1,35 @@
+! https://www.fangzhenxiu.com/post/1764755/
+! 杆系结构快速建模
+! lcsl:在线的相交点处将相交线断开，并生成新线
+! 注意线极多时，可能花费的时间很长，也可能无法全部打断，可选择未打断的线再进行操作
+
+! -----------------------------------------
+! 1.井字梁
+Finish$/clear$/prep7
+hc=4$hgs=30$sc=3$sgs=50
+!当交点很多时，布尔运算完不成
+k,1$k,2,hc$k,3,,sc
+l,1,2$l,1,3
+! 1个单位长度内划分一条线
+lgen,hgs+1,1,0,0,0,sc/hgs
+lgen,sgs+1,2,0,0,hc/sgs
+! 在交叉处生成节点
+lplot
+lcsl,all
+nummrg,all$numcmp,all
+
+! 米子桁架
+Finish$/clear$/prep7$mzk=8
+mzs=10$hg=6
+k,1$k,2,mzk/2$k,3,mzk
+k,4,,hg$k,5,mzk/2,hg$k,6,mzk,hg
+l,1,6$l,2,5$l,3,4
+lgen,mzs,all,,,mzk
+
+l,kp(0,0,0),kp(mzk*mzs,0,0)
+l,kp(0,hg,0),kp(mzk*mzs,hg,0)
+l,kp(0,0,0),kp(0,hg,0)
+l,kp(mzk*mzs,0,0),kp(mzk*mzs,hg,0)
+
+lcsl,all!
+nummrg,all$numcmp,all!

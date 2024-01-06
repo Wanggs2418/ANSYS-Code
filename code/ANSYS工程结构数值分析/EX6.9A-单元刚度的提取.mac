@@ -1,0 +1,25 @@
+! Ex6.9A 提取单元刚度矩阵-P360
+finish
+/clear
+/prep7
+et, 1, beam3
+mp, ex, 1, 2e5
+r, 1, 1e-2, 32e-5, 0.5
+n, 1
+n, 2, 0, 4
+n, 3, 4, 4
+n, 4, 4, 0
+en, 1, 2, 3
+en, 2, 1, 2
+en, 3, 4, 3
+f, 2, fx, 5
+sfbeam, 1, 1, pres, 10,,,, 2, -1    ! 单元荷载
+sfbeam, 2, 1, pres, 3   
+d, 1, all   ! 节点约束
+d, 4, all
+/solu
+/output, elemstiff, txt ! 输出单元矩阵
+/debug, -1,,, 1 ! 设置单元刚度矩阵和单元荷载向量
+solve
+/output ! 求解，设置输出到终端
+finish

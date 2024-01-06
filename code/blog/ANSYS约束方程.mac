@@ -1,0 +1,39 @@
+! https://www.fangzhenxiu.com/post/1409802/
+! ANSYS约束方程
+
+! 1.实体单元之间的耦合
+FINISH$/CLEAR$/PREP7
+! eps = 0.01
+eps = 0.0
+BLC4,,,0.5,0.6,2$WPOFF,,,2+eps
+BLC4,,,0.2,0.3,2$WPCSYS,-1
+
+ET,1,SOLID185$ET,2,SOLID186
+MP,EX,1,2.1E11$MP,PRXY,1,0.3
+MP,EX,2,1.8E11$MP,PRXY,2,0.32
+VSEL,S,,,1$VATT,1,,1
+ESIZE,0.14$MSHKEY,1$VMESH,ALL
+
+VSEL,S,,,2$VATT,2,,2
+ESIZE,0.08$MSHKEY,1$VMESH,ALL
+
+NSEL,S,LOC,Z,0$D,ALL,ALL
+P=3E5$NSEL,S,LOC,Z,4
+*GET,NN,NODE,,COUNT
+F,ALL,FY,-P/NN
+
+!创建约束方程
+! 选择单元和节点
+! 节点从密度大的网格选择,单元从密度小的网格选择
+! NSEL,a,LOC,Z,2+eps
+! esel, s, cent, z, 2+eps, 2+eps+0.08
+! nsle
+! VSEL,S,,,2
+! eslv
+! nsle
+NSEL,s,LOC,Z,2+eps
+/pnum, node, 1
+CEINTF,,ALL
+
+ALLSEL,ALL
+/SOLU$SOLVE$/POST1$PLNSOL,U,Y

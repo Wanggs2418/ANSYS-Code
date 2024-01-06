@@ -1,0 +1,46 @@
+! EX14.4 固定滑动方向的滑块单元,P504
+finish
+/clear
+/prep7
+l1 = 1000
+l2 = 300
+et, 1, beam3
+et, 2, mpc184, 3    ! 滑块单元
+et, 3, mpc184, 1, 1 ! k刚性梁单元kop1=1,拉格朗日乘子法kop2=1
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+r, 1, 80, 500, 10
+k, 1
+k, 2, l1
+l, 1, 2
+latt, 1, 1, 1
+esize, 20
+lmesh, all
+n, 100, l1, l2
+n, 101, l1, -l2
+n, 102, l1, l2+0.1
+n, 103, l1, -(l2+0.1)
+type, 2
+e, 2, 101, 100  ! 中间连接为滑块单元
+type, 3
+e, 100, 102
+e, 103, 101 ! 两端为长度为0.1的刚性梁单元便于施加约束
+! 施加约束
+d, 1, all
+d, 102, all
+d, 103, all
+f, 2, fy, -2000 ! 施加到滑块单元的i节点
+/solu
+nlgeom, on
+outres, all, all
+time, 1
+nsubst, 20
+solve
+
+! 后处理
+/post1
+plnsol, u, sum
+antime, 50, 0.2
+
+
+

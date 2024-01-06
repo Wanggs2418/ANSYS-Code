@@ -1,0 +1,71 @@
+! EX6.28-2D梁与2D实体刚性连接, P393
+! 十字伪梁法
+finish
+/clear
+/prep7
+l1 = 0.5
+l2 = 2
+h1 = 0.6
+h2 = 0.02
+t = 0.016
+q0 = 3000
+q = q0*t
+a0 = t*h2
+i0 = t*h2*h2*h2/12
+! 单元类型
+et, 1, beam3
+et, 2, plane42,,, 3 ! keyopt(3)=3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, t
+r, 2, a0, i0, h2
+
+! 建立几何模型
+blc4,,, l1, h1
+wpoffs,, h1/2
+wprota,, 90
+asbw, all
+wpcsys, -1
+k, 50, l1+l2, h1/2
+ksel, s, loc, x, l1
+ksel, r, loc, y, h1/2
+*get, kp0, kp,, num, max
+ksel, all
+l, kp0, 50
+! 属性
+lsel, s, loc, y, h1/2
+lsel, r, loc, x, l1, l1+l2
+cm, l1cm, line
+latt, 1, 2, 1
+lesize, all,,, 10
+lmesh, all
+asel, all
+aatt, 1, 1, 2
+esize, 0.1
+mshape, 0
+mshkey, 1
+amesh, all
+! 施加约束
+lsel, s, loc, x, 0
+dl, all,, all
+cmsel, s, l1cm
+esel, s
+sfbeam, all, 1, pres, q
+! /trlcy, elem 1
+
+! 十字伪梁法模拟刚性连接
+r, 3, a0, 1e4*i0, h2    ! 伪梁实常数为3号
+allsel, all
+type, 1
+real, 3
+e, 1, 37    ! 在节点1和37上建立伪梁单元
+e, 1, 19    ! 在节点1和19上建立伪梁单元
+
+! 求解设置
+/solu
+solve
+/post1
+pldisp, 1
+plnsol, s, eqv
+/window, 1, left
+/udoc,, cntr, left

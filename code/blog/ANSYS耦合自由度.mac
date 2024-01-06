@@ -1,0 +1,74 @@
+! https://www.fangzhenxiu.com/post/1335103/
+! ANSYS耦合自由度
+
+! cp command
+FINISH$/CLEAR$/PREP7
+
+L=1000$L1=100$B=200$H=100
+
+K,1$K,2,L$K,3,L-L1,H$K,4,2*L-L1,H
+
+K,5,L,500$L,1,2$L,3,4
+
+ET,1,BEAM189$MP,EX,1,2E5$MP,PRXY,1,0.3
+
+SECTYPE,1,BEAM,RECT$SECDATA,B,H
+
+LATT,1,,1,,,5,1$ESIZE,H/2$LMESH,ALL
+
+DK,1,ALL$FK,4,FY,-2E4
+save
+
+!错误的耦合
+!强迫一群节点的自由度相等，即粘接区段的节点位移全部等同一个节点
+! NSEL,S,LOC,Y,0
+! NSEL,A,LOC,Y,H
+! NSEL,R,LOC,X,L-L1,L
+! CP,NEXT,ALL,ALL
+
+! 选择对应的耦合点
+NSEL,S,LOC,Y,0
+NSEL,A,LOC,Y,H
+NSEL,R,LOC,X,L-L1,L
+! CP,NEXT,ALL,ALL
+
+*DIM,N1,,5
+*DIM,N2,,5
+! 上下梁耦合点的编号
+N1(1)=38,39,40,41,2
+N2(1)=62,64,65,66,67
+
+! next,最高既有集号+1,lab=all时的缺省选项
+! 节点一对一耦合设置
+*DO,I,1,5
+CP,NEXT,ALL,N1(I),N2(I)
+*ENDDO
+
+! cpintf command
+FINISH$/CLEAR$/PREP7$L=1000
+
+L1=100$B=200$H=100
+
+BLC4,,,L,H,B$VGEN,2,ALL,,,L-L1,H
+
+WPOFF,L-L1$WPROTA,,,90$VSBW,ALL
+
+WPOFF,,,L1$VSBW,ALL$WPCSYS,-1
+
+ET,1,SOLID186
+
+MP,EX,1,2E5$MP,PRXY,1,0.3
+
+ESIZE,H/4$MSHKEY,1$VMESH,ALL
+
+ASEL,S,LOC,X,0$DA,ALL,ALL
+
+NSEL,S,LOC,Y,H$NSEL,R,LOC,X,L-L1,L
+
+!正确的耦合自由度
+
+CPINTF,ALL
+
+!错误的耦合自由度
+
+CP,NEXT,ALL,ALL

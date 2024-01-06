@@ -1,0 +1,52 @@
+! EX6.32-梁包含在壳面内(梁壳刚接) P396
+! 梁偏置
+finish
+/clear
+/prep7
+l = 500
+b1 = 200
+b2 = 12
+t = 2
+h = 15
+q1 = 0.01
+q2 = 10
+et, 1, shell63
+et, 2, beam188
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+r, 1, t
+sectype, 1, beam, rect
+secdata, b2, h, 3, 3
+secoffset, user, 0, h/2+t/2 ! 截面远点偏移到(h+t)/2
+
+! 旋转工作平面，创建矩形截面
+wprota,, 90
+rectng, -b1/2, b1/2, 0, l
+wprota,,, 90
+asbw, all
+wpcsys, -1
+lsel, s, tan1, x
+lesize, all,,, 50
+lsel, s, tan1, z
+lesize, all,,, 10
+aatt, 1, 1, 1
+amesh, all
+
+! 梁截面方向点
+k, 100,, 100, 100
+lsel, s, loc, x, 0
+! 在赋予属性时设置方向点
+latt, 1,, 2,, 100,, 1
+lmesh, all
+lsel, s, loc, z, 0
+dl, all,, all
+lsel, s, loc, x, b1/2
+sfl, all, pres, q2
+sfa, all, a, pres, q1
+allsel, all
+
+! 求解
+/solu
+solve
+/post1
+pldisp, 1

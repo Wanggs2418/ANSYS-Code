@@ -1,0 +1,64 @@
+! EX6.33-梁在壳面内(但不包含), P-398
+finish
+/clear
+/prep7
+b0 = 0.1
+h0 = 0.09
+t0 = 0.01
+l0 = 3
+et, 1, shell63,,, 2
+et, 2, beam188
+et, 3, mpc184, 1
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, t0
+sectype, 1, beam, i
+secdata, b0, b0, h0, t0, t0, t0
+wprota,, 90
+blc4,,, b0, l0/2
+agen, 2, all,,,, h0-t0
+wpoffs, b0/2
+wprota,,, 90
+blc4,,, h0-t0, l0/2
+aglue, all
+wpcsys, -1
+wpoffs,, (h0-t0)/2
+wprota,, 90
+asbw, all
+esize, b0/6
+mshape, 0
+mshkey, 1
+aatt, 1, 1, 1
+amesh, all
+
+kp0 = kp(b0/2, (h0-t0)/2, l0/2)
+k, 100, kx(kp0), ky(kp0), l0
+k, 200, kx(kp0), l0, l0 ! 方位点
+
+lsel, none
+l, kp0, 100
+lesize, all,,, 10
+latt, 1,, 2,,, 200,, 1
+lmesh, all
+lsel, s, loc, z, l0/2
+latt, 1,, 3
+lmesh, all
+
+lsel, s, loc, z, 0
+dl, all,, all
+asel, s, loc, y, h0-t0
+sfa, all, 1, pres, 5000
+asel, s, loc, x, b0/2
+sfa, all, a, pres, 3000
+lsel, s, loc, z, l0/2+0.1, l0
+esll, s
+! 竖向均布荷载
+sfbeam, all, 1, pres, 5000*b0
+sfbeam, all, 2, pres, -3000*(h0-t0)
+allsel, all
+finish
+
+! 求解
+/solu
+solve
+/post1

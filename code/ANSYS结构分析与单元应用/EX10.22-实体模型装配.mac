@@ -1,0 +1,98 @@
+!EX10.22 2D 实体模型装配 P438
+! 划分为两部分，网格的疏密不同，边界点重合不共线
+finish
+/clear
+/prep7
+et, 1, plane42
+et, 2, plane82
+et, 3, conta172
+et, 4, targe169
+! keyopt(2)=2,接触算法选择多点约束法(MPC法)
+keyopt, 3, 2, 2
+! keyopt(4)=1,接触检测点的位置为接触面法向节点，为分布力面
+keyopt, 3, 4, 1
+! keyopt(12)=5, 绑定(永远)
+keyopt, 3, 12, 5
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+r, 1
+r, 2
+
+! 创建几何模型
+k, 1
+k, 2, 30
+k, 3, 30, 40
+k, 4, 50, 40
+k, 5, 50, 80
+k, 6, 30, 80
+k, 7, 0, 80
+k, 8, 0, 40
+a, 1, 2, 3, 8
+a, 3, 4, 5, 6
+a, 8, 3, 6, 7
+! 另一部分
+asel, none
+lsel, none
+k, 9, 30
+k, 10, 100
+k, 11, 100, 15
+k, 12, 50, 15
+k, 13, 50, 40
+k, 14, 30, 40
+*do, i, 9, 13
+    l, i, i+1
+*enddo
+l, 9, 14
+lfillt, 13, 14, 10
+al, all
+kwpave, 15
+wprota,,, 90
+asbw, all
+kwpave, 16
+wprota,, 90
+asbw, all
+kwpave, 9
+wprota,, -35
+asbw, all
+wpcsys, -1
+! 划分网格的疏密
+! mat=1, real=1, type=2
+aatt, 1, 1, 2
+esize, 4
+mshkey, 1
+amesh, all
+asel, inve
+aatt, 1, 1, 1
+esize, 6
+amesh, all
+
+! 定义接触,接触边界
+lsel, s,,, 2, 5, 3
+nsll, s, 1
+type, 4 ! 目标单元
+real, 2
+esurf
+lsel, s,,, 11, 15, 4
+lsel, a,,, 22
+nsll, s, 1
+type, 3 ! 接触单元
+esurf
+
+! 施加荷载和约束
+lsel, s, loc, x, 0
+dl, all,, ux
+lsel, s, loc, y, 0
+dl, all,, uy
+lsel, s, loc, x, 100
+sfl, all, pres, -100
+allsel, all
+
+! 求解
+/solu
+solve
+celist, all,,, inte
+eplot
+
+! 后处理
+/post1
+plnsol, s, x

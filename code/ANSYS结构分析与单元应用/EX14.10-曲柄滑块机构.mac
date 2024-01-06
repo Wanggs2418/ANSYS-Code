@@ -1,0 +1,58 @@
+! P516
+! 曲柄滑块机构（刚性梁+销轴+滑槽）
+finish
+/clear
+/prep7
+r = 1.0
+l = 4.0
+w = 2*acos(-1)  
+! 定义几何参数和单元类型
+et, 1, mpc184, 1, 1 !刚性梁单元,kop1=1:拉格朗日乘子法kop2=1
+et, 2, mpc184, 6    !销轴连接单元,kop1=6
+et, 3, mpc184, 8    !滑槽连接单元,kop1=8
+keyopt, 2, 4, 1     !用局部坐标轴3为转轴的z轴销轴连接
+
+n, 1
+n, 2, r
+n, 3, r
+n, 4, r+l
+n, 5, r+l+0.1, -r
+n, 6, r+l, -r
+
+type, 1
+e, 1, 2
+e, 3, 4
+e, 5, 6
+
+local, 11
+sectype, 1, joint, revo
+secjoint, lsys, 11
+type, 2
+secnum, 1
+e, 2, 3
+
+local, 12
+sectype, 2, joint, slot
+secjoint, lsys, 12
+type, 3
+secnum, 2
+e, 5, 4 !滑槽单元
+
+csys, 0
+d, 1, all
+d, 1, rotz, 2*acos(-1)
+d, 6, all
+
+/solu
+nlgeom, on
+outres, all, all
+time, 1
+nsubst, 300,, 200
+cnvtol, f, 1
+cnvtol, m, 1
+solve
+finish
+
+/post1
+plnsol, u, sum
+antime, 50, 0.2

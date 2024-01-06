@@ -1,0 +1,88 @@
+! EX5.5荷载工况及操作，简支梁荷载工况组合及弯矩包络图
+finish
+/clear
+filename_m = 'test'
+/filname, filename_m
+/prep7
+! 恒载，活载参数，划分单元数目
+p = 5000
+q = 400
+ne = 8
+! 定义类型并创建模型
+et, 1, beam3
+r, 1, 0.06, 4.5e-4, 0.3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+k, 1
+k, 2, 8
+l, 1, 2
+lesize, all,,, ne
+lmesh, all
+dk, 1, ux,,,, uy
+dk, 2, uy
+finish
+
+! 求解
+/solu
+antype, 0
+! 施加面恒载q,all-所有单元,lkey=1截面面号1-梁单元中有说明，pres面荷载的标识符,结构分析为pres
+sfbeam, all, 1, pres, q
+solve
+sfedele, all, all, all
+! 施加活载到每个节点上(除去端节点1，2)
+*do, i, 2, ne
+    fdele, all, all
+    f, i+1, fy, -p
+    solve
+*enddo
+finish
+
+! 后处理
+/post1
+! 6,12(i,j) 两个节点在单元坐标系下z向杆件弯矩 mmomz
+etable, m1, smisc, 6
+etable, m2, smisc, 12
+! etable中的lab=refl，单元表名，根据最近的etbale命令重新填充表格
+! 获得不同活载下的弯矩图
+/show, jpeg
+*do, i, 1, ne
+    set, i
+    etable, refl
+    plls, m1, m2, -1
+*enddo
+/show, term
+
+! 从结果文件创建荷载工况
+! lcon任意的工况号，lstep拟作为荷载工况的荷载步数,sbstep荷载子步数
+! lcdef, stat, all    ! 列出所有的荷载工况
+*do, i, 1, ne
+    lcdef, i, i
+*enddo
+! 荷载缩放系数，恒载系数1.2,活载1.4
+lcfact, 1, 1.2
+*do, i, 2, ne
+    lcfact, i, 1.4
+*enddo
+
+! 数据库结果清零，读入工况1
+lczero
+lcase, 1    ! 工况1读入数据库
+etable, refl    ! 重新填充表
+plls, m1, m2, -1
+pretab, m1, m2
+lcwrite, ne+1, mmin ! 数据库结果写入工况ne+1
+
+lczero
+lcsel, s, 2, ne, 1  ! 选择2~ne之间的工况,间隔为1
+lcoper, abmx, all   ! 从中绝对值最大的工况
+etable, refl
+plls, m1, m2, -1    ! 显示图形
+lcwrite, ne+2, nmax ! 写入荷载工况ne+2
+
+! 选择最后两个工况
+lczero
+lcsel, s, ne+1, ne+2, 1
+lcoper, add, all
+etable, refl
+plls, m1, m2, -1
+pretab, m1, m2

@@ -1,0 +1,67 @@
+! https://www.fangzhenxiu.com/post/1857048/
+! 出现负特征值的情况多发生在整体受弯或局部受弯为主的结构或构件，也就是荷载反向后能够发生相同的屈曲
+! 荷载反向后能够出现相同的问题
+
+! -----------------------------------
+! 1.梁在横向荷载作用下的侧倾屈曲
+FINISH$/CLEAR$/PREP7
+!定义悬臂梁截面尺寸和长度参数
+A=20$B=50$L=1000
+!创建模型并网分
+K,1$K,2,L$K,3,0,100$L,1,2
+ET,1,BEAM189
+MP,EX,1,2.1E5$MP,PRXY,1,0.3
+SECTYPE,1,BEAM,RECT
+SECDATA,A,B
+LATT,1,1,1,,,3,1
+ESIZE,50$LMESH,ALL$DK,1,ALL
+
+! 特征值屈曲分析，先施加1单位荷载，然后设置特征值屈曲求解
+!侧倾屈曲有负特征值
+! FK,2,FY,-1
+!中心受压柱子则无负特征值
+FK,2,FX,-1
+/SOLU$PSTRES,ON$SOLVE$FINISH
+/SOLU$ANTYPE,1
+N=8
+! 采用分块的兰索斯法，特征数目为n=8阶
+BUCOPT,LANB,N
+!不设置模态扩展范围
+MXPAND,N,0,0,YES
+!设置模态扩展范围为1E-8~1E8
+!MXPAND,N,1E-8,1E8,YES
+OUTRES,ALL,ALL
+SOLVE$FINISH
+/POST1$SET,LIST
+
+! -----------------------------------
+! 2.剪切荷载作用下的板的屈曲
+FINISH$/CLEAR$/PREP7
+BLC4,0,0,500,800
+ET,1,SHELL281
+MP,EX,1,2.1E5
+MP,PRXY,1,0.3
+SECTYPE,1,SHELL
+SECDATA,12
+AATT,1,,1,,1
+MSHKEY,1$ESIZE,20$AMESH,ALL
+DL,1,,ALL
+!施加正X向水平荷载
+NSEL,S,LOC,Y,800
+*GET,NT,NODE,,COUNT
+F,ALL,FX,1/NT
+NSEL,ALL
+
+! 特征值求解
+/SOLU
+PSTRES,ON
+SOLVE
+finish
+/SOLU
+ANTYPE,1
+NM=8
+BUCOPT,LANB,NM
+MXPAND,NM,0,0,YES
+SOLVE
+
+/POST1$SET,LIST$SET,1,1$PLDISP

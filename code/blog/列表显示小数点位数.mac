@@ -1,0 +1,21 @@
+! 列表显示坐标的小数点后位数，用没有公开的“XYZ”
+! https://www.fangzhenxiu.com/post/1870411/
+! 创建如下的六面体并划分网格：
+FINISH$/CLEAR$/PREP7
+
+A=0.6123456789
+
+B=0.9123456789
+
+L=8.123456789
+
+BLC4,,,A,B,L
+
+ET,1,SOLID186
+
+ESIZE,0.3$VMESH,ALL
+
+! 列表保留精度设定，nlist
+klist   ! 保留3位
+klist,,,, coord ! 显示高精度类型,保留小数点后7位
+klist,,,, xyz   ! 保留小数点后12位

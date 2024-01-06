@@ -1,0 +1,106 @@
+! EX10.1-等间隙长方体接触分析 P393
+! 要点:单元接触力和合力矩的计算方法
+finish
+/clear
+/prep7
+a = 20
+b = 10
+c = 40
+q = 100     ! 均布荷载
+dg = 0.1    ! 几何间隙
+et, 1, solid95
+et, 2, conta174
+et, 3, targe170
+! keyopt(5)=4,自动ICONT闭合间隙
+keyopt, 2, 5, 4
+! 实常数采用默认值,法向接触刚度系数fkn=1.0,侵入容差系数ftoln=0.1
+r, 1
+r, 2
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+
+! 创建几何模型并划分网格
+blc4,,, a, b, c
+vgen, 2, 1,,,, b+dg
+esize, 5
+mshkey, 1
+vatt, 1, 1, 1
+vmesh, all
+/view, 1, 1, 1, 1
+/psymb, esys, 1 ! 查看单元的法线方向
+
+! 定义接触形式
+nsel, s, loc, y, b+dg
+type, 2 ! 接触单元
+real, 2
+esurf
+nsel, s, loc, y, b
+type, 3 ! 目标单元
+esurf
+
+! 施加荷载和约束
+allsel, all
+asel, s, loc, y, 2*b+dg
+sfa, all, 1, pres, q
+asel, s, loc, y, 0
+da, all, uy
+dk, 2, ux,,,, uz    ! uz和ux方向约束
+dk, 4, uz
+dk, 5, ux
+dk, 10, ux,,,, uz
+dk, 13, ux
+dk, 12, uz
+allsel, all
+
+! 求解
+/solu
+! cncheck
+nsubst, 10
+solve
+save
+
+! 通用后处理
+/post1
+esel, s, type,, 2
+plnsol, cont, pres  ! 绘制接触应力
+plnsol, cont, pene  ! 侵入云图
+plnsol, cont, stat  ! 接触状态
+plnsol, cont, gap   ! 绘制间隙云图
+plnsol, cont, slide ! 绘制滑动云图
+plnsol, cont, stot  ! 绘制接触总应力云图
+plesol, cont, stat  ! 绘制单元的接触状态云图
+! ETABLE操作
+etable, penei, nmisc, 9     !单元节点i的侵入距离表
+etable, penej, nmisc, 10    !单元节点j的侵入距离表
+etable, penek, nmisc, 11    !单元节点k的侵入距离表
+etable, penel, nmisc, 12    !单元节点l的侵入距离表
+pletab, penei   ! 绘制单元表的云图
+
+! 求接触面合力
+! 方法1：直接通过etable获得单元接触合力分量求解(推荐)
+etable, cnfx, nmisc, 43
+etable, cnfy, nmisc, 44
+etable, cnfz, nmisc, 45
+ssum
+! 获取合力
+*get, sum_confx, ssum, 0, item, cnfx
+! 计算合力矩
+etable, cent_x, cent, x    ! 获取单元中心点的坐标(x, y, z)
+etable, cent_y, cent, y
+etable, cent_z, cent, z
+smult, tmx1, cnfy, cent_z, -1, 1    !tm1=-1×cnfy+1×cent_z
+smult, tmx2, cnfz, cent_y, 1, 1
+sadd, tmx, tmx1, tmx2
+ssum
+*get, mx, ssum, 0, item, tmx
+! my,mz 类似
+
+! 方法2：单元接触应力×单元面积=单元接触力
+etable, e_pres, smisc, 13
+! pretab, e_pres  ! 列表查看表格数据
+etable, e_area, volu
+! pretab, e_area
+! 接触应力×面积
+smult, e_cnf, e_pres, e_area, 1, 1
+ssum
+

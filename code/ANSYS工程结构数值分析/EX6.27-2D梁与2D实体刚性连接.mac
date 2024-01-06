@@ -1,0 +1,79 @@
+! EX6.27-2D梁与2D实体刚性连接, P392
+! ce约束方程法-row67
+finish
+/clear
+/prep7
+l1 = 0.5
+l2 = 2
+h1 = 0.6
+h2 = 0.02
+t = 0.016
+q0 = 3000
+q = q0*t
+a0 = t*h2
+i0 = t*h2*h2*h2/12
+! 单元类型
+et, 1, beam3
+! 4个节点，每个2个自由度
+et, 2, plane42,,, 3 ! keyopt(3)=3，可输入单元厚度
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, t
+r, 2, a0, i0, h2
+! 建立几何模型
+blc4,,, l1, h1
+wpoffs,, h1/2
+wprota,, 90
+asbw, all
+wpcsys, -1
+k, 50, l1+l2, h1/2
+ksel, s, loc, x, l1
+ksel, r, loc, y, h1/2
+*get, kp0, kp,, num, max
+ksel, all
+l, kp0, 50
+! 属性
+lsel, s, loc, y, h1/2
+lsel, r, loc, x, l1, l1+l2
+cm, l1cm, line
+latt, 1, 2, 1
+lesize, all,,, 10
+lmesh, all
+asel, all
+aatt, 1, 1, 2
+esize, 0.1
+mshape, 0
+mshkey, 1
+amesh, all
+! 施加约束
+lsel, s, loc, x, 0
+dl, all,, all
+cmsel, s, l1cm
+esel, s
+sfbeam, all, 1, pres, q
+! 选择建立约束方程的点
+ksel, s,,, kp0
+nslk, s
+*get, n1, node,, num, max
+nsel, s, loc, x, l1
+nsel, r, loc, y, h1/2, h1
+n2 = nnear(n1)
+nsel, s, loc, x, l1
+nsel, r, loc, y, 0, h1/2
+n3 = nnear(n1)
+! 约束方程
+! neqn-1方程编号为1，方程左端const=0, 约束方程第一项的节点编号n1
+! const = lab1×c1+lab2×c2
+! 0 = 1×UX_n2 - 1×UX_n3 + (ny(n2)-ny(n3))×ROTZ_n1
+ce, 1, 0, n2, ux, 1, n3, ux, -1, n1, rotz, ny(n2)-ny(n3)
+allsel, all
+
+
+! 求解设置
+/solu
+solve
+/post1
+pldisp, 1
+plnsol, s, eqv
+/window, 1, left
+/udoc,, cntr, left

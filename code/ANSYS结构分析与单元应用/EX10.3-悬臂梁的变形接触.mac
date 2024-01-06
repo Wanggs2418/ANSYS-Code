@@ -1,0 +1,80 @@
+! 两悬臂梁的变形接触 P397
+finish
+/clear
+/prep7
+b = 20
+h = 10
+l = 200
+dt = 5 ! 变形前的间隙 5mm
+et, 1, solid95
+et, 2, conta174
+et, 3, targe170
+! 在每一子步中更新接触刚度
+keyopt, 2, 10, 1
+r, 1
+r, 2
+rmodif, 2, 3, 0.01  ! fkn(v3)=0.01
+
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+blc4,,, b, h, l
+vgen, 2, 1,,, 0, h+dt, 0.8*l
+wpoffs,,, 0.7*l
+vsbw, all
+wpoffs,,, 0.4*l
+vsbw, all
+wpcsys, -1
+vatt, 1, 1, 1
+esize, 5
+mshkey, 1
+vmesh, all
+! 上梁底面
+nsel, s, loc, z, 0.8*l, 1.2*l
+nsel, r, loc, y, h+dt
+type, 2
+real, 2
+esurf
+! 下梁顶
+nsel, s, loc, z, 0.7*l, l
+nsel, r, loc, y, h
+type, 3
+esurf
+nsel, all
+! 梁的端部施加固定约束
+asel, s, loc, z, 0
+asel, a, loc, z, 1.8*l
+da, all, all
+! 在梁顶面施加面荷载
+asel, s, loc, y, 2*h+dt
+sfa, all, 1, pres, 1.0
+
+! 求解
+/solu
+nlgeom, on
+outres, all, all
+time, 1
+nsubst, 20
+allsel, all
+solve
+
+! 总迭代次数
+*get, num_iter, active, 0, solu, ncmit
+/post1
+plnsol, u, y
+plnsol, s, z
+esel, s, type,, 2
+! 接触单元合力
+etable, fxi, nmisc, 43
+etable, fyi, nmisc, 44
+etable, fzi, nmisc, 45
+ssum
+allsel, all
+! 生成动画
+antime, 10, 0.5,, 1
+/post26
+! 定义悬臂端竖向位移为变量2
+n1 = node(0, h+dt, 0.8*l)
+nsol, 2, n1, u, y
+prod, 3, 2,,,,,, -1
+xvar, 3
+plvar, 1

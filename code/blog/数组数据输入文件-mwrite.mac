@@ -1,0 +1,44 @@
+! 数组输入到文件 *mwrite
+! https://www.fangzhenxiu.com/post/2130509/
+! (4)MWRITE输出数组
+
+*DIM,BXX,,50,30 ! 50行30列
+
+!数组赋值，按已知数据
+
+*DO,I,1,50
+
+*DO,J,1,30
+
+BXX(I,J)=I*J/100
+
+*ENDDO!!!!!!
+
+*ENDDO!!!!!!!!
+
+!按JIK,即列、行、面顺序输出
+! 50行30列
+*CREAT,OUT,MAC
+*MWRITE,BXX,BXXFILE,TXT,,JIK,30,50
+(30F6.2)
+*END
+
+! 按ijk输出,30行50列
+*CREAT,OUT1,MAC
+*MWRITE,BXX,BXXFILE1,TXT,,ijk,30,50
+(30F6.2)
+*END
+
+! 除去30，50后缀
+*CREAT,OUT2,MAC
+*MWRITE,BXX,BXXFILE2,TXT,,ijk, 30, 50
+(30F6.2)
+*END
+
+! c描述符号-fail
+*CREAT,demo,MAC
+*MWRITE,BXX,BXXFILE_demo,TXT,,JIK,30,50
+! "%4.2g"
+30%g
+*END
+OUT

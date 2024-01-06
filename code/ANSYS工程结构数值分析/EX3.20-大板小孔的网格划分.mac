@@ -1,0 +1,29 @@
+! EX3.20 大板小孔的网格划分 P223
+finish
+/clear
+/prep7
+a0 = 100
+! 创建模型
+blc4,,, a0, a0
+cyl4,,, a0/100
+asba, 1, 2
+csys, 1
+k, 50, a0/20
+k, 51, a0/20, 90
+l, 50, 51
+asbl, all, 1
+et, 1, 82   ! plane82
+mshape, 0, 2d
+mshkey, 1
+
+! 划分网格, 设置网格划分的数目和间隔比
+lesize, 5,,, 8
+lesize, 1,,, 10
+lesize, 4,,, 8, 5
+lesize, 6,,, 8, 5
+amesh, 1    ! 划分编号为1的面
+amap, 2, 50, 51, 2, 4   ! 划分2面
+csys, 0
+arsym, x, all
+arsym, y, all
+nummrg, all

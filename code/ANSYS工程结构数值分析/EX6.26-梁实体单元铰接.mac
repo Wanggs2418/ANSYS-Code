@@ -1,0 +1,69 @@
+! EX6.26-梁实体单元铰接,P390
+! 在连接处需要将实体进行切分,横竖两刀的交点
+finish
+/clear
+/prep7
+l1 = 2
+l2 = 4
+b = 1.6
+h = 2
+err = 0.1
+et, 1, solid95
+! 3D 弹性梁单元，每个节点6个自由度，拉压，弯曲和扭转
+et, 2, beam4
+mp, ex, 1, 3.3e10
+mp, prxy, 1, 0.2
+mp, ex, 2, 2.1e11
+mp, prxy, 2, 0.3
+r, 1, 0.00908, 2.14e-3, 1.45e-2, 0.3, 0.2
+rmore,, 6.52e-5
+/view, 1, 1, 1, 1
+/angle, 1, -120, zs, 1
+! 几何建模
+blc4,,, l1, b, h
+wpoffs,,, h/2
+vsbw, all   ! 梁-实体连接处切分
+wpoffs,, b/2
+wprota,, 90
+vsbw, all
+wpcsys, -1
+! 创建梁
+k, 50, l1+l2/2, b/2, h/2
+k, 51, l1+l2, b/2, h/2
+l, 16, 50
+l, 50, 51
+! 选择面施加约束
+asel, s, loc, x, 0
+da, all, all
+ksel, s, loc, x, l1+l2
+dk, all, all
+! 施加荷载
+fk, 50, fx, 1e4
+fk, 50, fy, 2e4
+fk, 50, fz, -3e4
+fk, 50, mx, 1.5e4
+vsel, all
+vatt, 1,, 1
+esize, 0.2
+mshape, 0
+mshkey, 1
+vmesh, all
+lsel, s, loc, x, l1+err, l1+l2
+latt, 2, 1, 2
+lesize, all,,, 4
+lmesh, all
+allsel
+finish
+
+! 求解
+/solu
+solve
+/post1
+pldisp, 1
+etable, fxi, smisc, 1
+etable, fxj, smisc, 7
+plls, fxi, fxj  ! 内力图
+
+
+
+

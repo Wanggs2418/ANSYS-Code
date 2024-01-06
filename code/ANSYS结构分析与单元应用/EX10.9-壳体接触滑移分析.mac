@@ -1,0 +1,136 @@
+! EX10.9-壳体接触滑移分析 P405
+! 建模时板采用壳单元 shell181,接触单元采用 conta174 和 targe170
+finish
+/clear
+/prep7
+a1 = 300
+b1 = 200
+a2 = 400
+b2 = 160
+t1 = 10
+t2 = 20
+
+! 定义单元类型
+et, 1, shell181
+et, 2, conta174
+et, 3, targe170
+! 接触单元采用CNOF降低侵入keyopt(5)=2,并考虑厚度的影响keyopt(11)=1
+keyopt, 2, 5, 2
+keyopt, 2, 11, 1
+! 定义材料常数及壳体实常数
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+mp, mu, 2, 0.20 ! 设定动摩擦系数0.20
+! 1 为实常数组号
+r, 1, t1    ! 第一组实常数
+r, 2, t2
+r, 3,,, 1, 0.001    ! 接触单元1-法向接触刚度, 0.001-侵入容差系数
+! 静摩擦系数/动摩擦系数=1.25，衰减系数为0.6
+rmodif, 3, 21, 1.25, 0.6    ! conta174中的实常数21，22
+r, 4,,, 1, 0.001
+rmodif, 4, 21, 1.25, 0.6
+
+! 创建几何模型
+blc4,,, a2, b2
+wpoffs,,, t2/2+t1/2
+blc4,, -(b1-b2)/2, a1, b1
+agen, 2, 2,,,,, -(t1+t2)
+asel, s,,, 1
+aatt, 1, 2, 1   ! mat=1, r=2, type=1
+asel, s,,, 2, 3
+aatt, 1, 1, 1
+asel, all
+esize, 20
+amesh, all
+
+! 生成接触单元-B和A
+asel, s,,, 1
+nsla, s, 1  ! 选择面内部的点和线
+type, 2 ! 接触单元
+mat, 2
+real, 3 
+esurf,, top
+! 目标单元
+asel, s,,, 2
+nsla, s, 1
+type, 3 ! 目标单元
+esurf,, bottom
+! B和C
+asel, s,,, 1
+nsla, s, 1
+type, 2
+mat, 2
+real, 4
+esurf,, bottom
+asel, s,,, 3
+nsla, s, 1
+type, 3
+esurf,, top
+allsel, all
+
+! 施加约束和边界条件
+dl, 8,, ux
+dl, 12,, ux ! 上下两个面的端线
+da, 3, uz   ! 底部截面
+dk, 5, uy   
+dk, 9, uy   ! 上下两个面的x方向位移
+
+! 求解
+/solu
+antype, 0
+nropt, unsym    ! Newton-Raphson 选项设置
+outres, all, all
+! 第一荷载步施加压力
+time, 1
+nsubst, 10
+sfa, 2, 1, pres, -1.0
+! 第二荷载步施加滑移
+time, 21
+nsubst, 100,, 20    ! 最小子步20
+dl, 2,, ux, 100
+solve
+save
+
+! 后处理，查看结果
+/post1
+/view, 1, 1, 1, 1
+/angle, 1, -120, zs, 1
+/dscale,, 1
+plnsol, u, x
+plnsol, s, x
+! 接触压力
+esel, s, type,, 2
+! 接触压力
+etable, pres, smisc, 13
+pletab, pres
+! 接触应力
+etable, tauri, smisc, 5
+pletab, tauri
+! 总滑动
+etable, tasri, nmisc, 17
+pletab, tasri
+! x,y,z方向单元接触力
+etable, cnfx, nmisc, 43
+etable, cnfy, nmisc, 44
+etable, cnfz, nmisc, 45
+pretab, cnfx, cnfy, cnfz
+ssum    ! 求和，fx为f方向总接触力=摩擦力
+! 摩擦系数
+etable, mui, nmisc, 62
+pletab, mui
+
+! 进入时程处理查看结果
+/post26
+numvar, 20
+esol, 2, 601, 50, cont, stat    ! 节点50的接触状态
+esol, 3, 601, 50, cont, pres    ! 节点的接触压力
+esol, 4, 601, 50, cont, slide   ! 节点的滑动量
+esol, 5, 601, 50, cont, stot    ! 节点的接触总应力
+esol, 6, 601, 50, nmisc, 62     ! 节点摩擦系数变化曲线
+plvar, 2
+plvar, 3
+plvar, 4
+plvar, 5
+plvar, 6
+rforce, 7, 2, f, x  ! 节点2的支反力曲线
+plvar, 7

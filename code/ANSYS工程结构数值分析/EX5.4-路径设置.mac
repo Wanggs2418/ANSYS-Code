@@ -1,0 +1,145 @@
+! Ex5.1结果处理方式,P302
+! EX5.4-P321
+finish
+/clear
+/prep7
+! 1.建模，施加荷载，施加约束
+et, 1, plane82
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+blc4,,, 60, 40  ! 长方形宽60，高40
+cyl4, 30, 20, 10    ! 
+asba, 1, 2
+! 十字形切分截面
+wprota,, 90
+wpoffs,,, -20
+asbw, all
+wpoffs, 30
+wprota,,, 90
+asbw, all
+wpcsys, -1
+! 划分网格
+lccat, 14, 15
+lccat, 9, 16
+lccat, 2, 13
+lccat, 10, 18
+esize, 2
+mshape, 0, 2d
+mshkey, 1
+amesh, all
+! 施加荷载
+lsel, s, loc, x, 0
+lsel, a, loc, x, 60
+sfl, all, pres, -100
+lsel, s, loc, x, 30
+! 施加约束
+dl, all,, ux
+lsel, s, loc, y, 20
+dl, all,, uy
+allsel
+
+! 求解并进入求解层
+finish
+/solu
+solve
+save
+
+! EX5.4-P321
+! 路径操作
+! 1.通过圆孔中心从下到上定义一条路径，并显示x和y方向应力分布
+/post1
+path, pa1, 2    ! 定义路径,2个点组成的路径
+ppath, 1,, 30   ! 路径的几何结构 x=30
+ppath, 2,, 30, 40   ! 路径的几何结构 x=30,y=40
+pdef, mysx, s, x
+pdef, mysy, s, y    ! 映射 Sx 到 mysx, Sy到 mysy
+plpath, mysx, mysy
+
+! 2.从左到右定义一条路径，显示x,y方向及总位移
+path, pa2, 2
+ppath, 1, 872
+ppath, 2, 72
+pdef, myux, u, x
+pdef, myuy, u, y
+pdef, myu, u, sum
+plpath, myux, myuy, myu
+
+! 3.沿圆弧定义一条圆弧路径，显示主应力1，3
+! 3/4圆弧
+local, 12, 1, 30, 20
+path, pa3, 3    ! 3个点
+ppath, 1,, 30, 10   
+ppath, 2,, 30, 30   
+ppath, 3,, 20, 20
+pdef, mys1, s, 1
+pdef, mys3, s, 3
+plpath, mys1, mys3
+padele, mys1
+padele, mys3
+pdef, stat  ! 查看路径信息
+
+
+! 4.沿着路径显示路径数据
+! 当前路径为 myp3
+plpagm, mys1, 20, node
+plpagm, mys3, 20
+
+! 5.列表显示路径数据及几何参数
+! xg, yg, zg 为程序预定义的参数，表示总体坐标
+! s 为距离起始点的路径长度
+prpath, mys1, mys3, xg, yg, zg
+
+! 6.定义路径长度范围并显示路径项
+prange, 5, 10, 40, xg
+prange, 3, 10, 40, s
+plpath, mys1, mys3
+prpath, mys1, mys3, xg, yg, zg, s
+prange, defa
+prpath, mys1, mys3, xg, yg, zg, s
+
+
+! 7.mys1操作加运算，显示addmys1
+prange, defa  ! 恢复默认设置
+! addmys1 = (mys1×1.2)+(-10)
+pcalc, add, addmys1, mys1,, 1.2,, -10
+plpath, addmys1
+
+! 8.保存路径，默认情况下离开post1环境就自动删除路径
+! 先保存到各自.path文件，最后统一保存
+pasave, pa1, pa1file, path
+pasave, pa2, pa2file, path
+pasave, pa3, pa3file, path
+pasave, all, pafile, path
+
+! 9.离开post1在进入
+finish
+/prep7
+eplot
+finish
+/post1
+! path, stat
+paresu,, pa1file, path
+plpath, mysx, mysy
+plpagm, mysx, 20, node
+paresu,, pa2file, path
+plpath, myux, myuy, myu
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

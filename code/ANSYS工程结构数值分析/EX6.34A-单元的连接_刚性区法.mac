@@ -1,0 +1,51 @@
+! EX6.34A 3D 梁单元与 3D 实体单元连接——刚性区法,P398
+finish
+/clear
+/prep7
+b = 10
+h = 20
+l1 = 100
+l2 = 150
+! 截面特性
+A1 = b*h
+I1 = b*h**3/12
+I2 = h*b**3/12
+et, 1, solid95
+et, 2, beam4
+mp, ex, 1, 3e5
+mp, prxy, 1, 0.3
+r, 1, A1, I1, I2, b, h
+! 创建实体
+blc5,,, b, h, l1
+wprota, 0, 90
+vsbw, all
+wprota,,, 90
+vsbw, all
+wpcsys, -1
+kp0 = kp(0, 0, l1)
+k, 100,,, l1+l2
+l, kp0, 100
+lsel, s, loc, z, l1+1, l1+l2    ! 选择梁线
+latt, 1, 1, 2
+lesize, all,,, 10
+lmesh, all
+vatt, 1,, 1
+esize, 2.5
+mshape, 1
+lsel, s, loc, z, 1, l1-1    ! 选择实体部分
+lesize, all, b/2
+vmesh, all
+asel, s, loc, z, 0
+da, all, all
+fk, 100, fx, 100
+fk, 100, fy, -200
+nsel, s, loc, z, l1
+cerig, 1, all
+allsel
+! 选择连接截面节点，创建刚性域
+/solu
+nlgeom, 1
+solve
+/post1
+pldisp, 1
+

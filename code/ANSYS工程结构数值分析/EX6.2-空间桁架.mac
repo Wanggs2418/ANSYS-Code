@@ -1,0 +1,210 @@
+! EX6.2 N型万能杆件桁架 P343
+finish
+/clear
+/prep7
+! 杆件面积参数值
+arean1 = 2330e-6
+arean3 = 1670e-6
+arean45 = 1150e-6
+sl = 2.0
+! 单元类型，实常数及材料性质
+et, 1, link8
+r, 1, 2*arean1
+r, 2, 3*arean1
+r, 3, 4*arean1
+r, 4, 3*arean3
+r, 5, 4*arean3
+r, 6, 4*arean45
+r, 7, 2*arean45
+mp, ex, 1, 2.1e11
+! 节点板与螺栓等重量,为杆件重量的7%
+mp, dens, 1, 7850*1.07
+
+! 创建几何模型-主桁架
+! 边长为2的正方形,sl=2
+k, 1
+k, 2, sl
+k, 3, 2*sl
+kgen, 2, all,,,, sl
+l, 1, 2
+l, 2, 3
+l, 4, 5
+l, 5, 6
+l, 1, 4
+l, 2, 5
+l, 3, 6
+l, 1, 5
+l, 5, 3
+lgen, 6, all,,, 2*sl    ! 复制,总共6份
+nummrg, all
+lgen, 2, all,,,,, sl
+! 上下纵联
+lsel, none
+k, 101,,, sl
+k, 102, sl,, sl
+k, 103, 2*sl,, sl
+l, 1, 101
+l, 2, 102
+l, 3, 103
+l, 1, 102
+l, 3, 102
+lgen, 6, all,,, 2*sl
+lgen, 2, all,,,, sl
+lsel, all
+! 空间正方形对角线
+l, 1, 16
+*get, l1, line,, num, max
+lgen, 13, l1,,, sl
+nummrg, all
+numcmp, all
+! 属性赋予2N1类别的杆件
+lsel, s, loc, x, 0, 4
+lsel, a, loc, x, 20, 24
+lsel, r, tan1, y
+lsel, r, tan1, z
+cm, l2N1, line
+latt, 1, 1  ! 2A1
+! 3N1杆件
+lsel, s, loc, x, 4, 8
+lsel, a, loc, x, 16, 20
+lsel, r, tan1, y
+lsel, r, tan1, z
+cm, l3N1, line
+latt, 1, 2, 1   ! 3A1
+! 4N1杆件
+lsel, s, loc, x, 8, 16
+lsel, r, tan1, y
+lsel, r, tan1, z
+cm, l4N1, line
+latt, 1, 3, 1   ! 4A1
+cmsel, a, l3N1
+cmsel, a, l2N1
+cm, xg, line    ! 2N1,3N1,4N1构成弦杆
+! 3N3杆件
+lsel, s, loc, x, 6, 18
+cmsel, u, xg
+lsel, u, tan1, y
+lsel, u, tan1, x
+latt, 1, 4, 1
+cm, l3N3, line
+! 4N3杆件
+lsel, s, loc, x, 0, 6
+lsel, a, loc, x, 18, 24
+cmsel, u, xg
+lsel, u, tan1, y
+lsel, u, tan1, x
+latt, 1, 5, 1
+cm, l4N3, line
+! 4N4或4N5
+lsel, s, loc, x, 0, 2
+lsel, a, loc, x, 22, 24
+lsel, r, tan1, x
+lsel, r, tan1, z
+latt, 1, 6, 1
+cm, l4N4, line
+allsel
+! 2N4或2N5杆件
+cmsel, u, xg
+cmsel, u, l3N3
+cmsel, u, l4N3
+cmsel, u, l4N4
+latt, 1, 7, 1
+allsel
+! 划分单元
+lesize, all,,, 1
+lmesh, all
+
+! 施加约束
+ksel, s, loc, x, 0
+ksel, r, loc, y, 0
+ksel, r, loc, z, 0
+dk, all, all
+ksel, s, loc, x, 0
+ksel, r, loc, y, 0
+ksel, r, loc, z, sl
+dk, all, uy
+ksel, s, loc, x, 24
+ksel, r, loc, y, 0
+ksel, r, loc, z, 0
+dk, all, uy,,,, uz
+ksel, s, loc, x, 24
+ksel, r, loc, y, 0
+ksel, r, loc, z, sl
+dk, all, uy
+allsel
+finish
+! /pbc, all,, 1
+
+! 求解
+/solu
+acel,, 9.8  ! 自重为第一荷载步
+solve
+
+acel,, 0
+p1 = 500*sl
+nsel, s, loc, z, 0
+f, all, fz, p1
+nsel, u, loc, x, 1, 23
+f, all, fz, p1/2
+nsel, all
+solve   ! 风荷载
+
+! 移动荷载为后续荷载步
+*do, i, 1, 5
+    fdele, all, all
+    nsel, s, loc, x, (i+1)*sl
+    nsel, r, loc, y, sl
+    f, all, fy, -300000
+    nsel, all
+    solve
+*enddo
+finish
+
+! 后处理
+/post1
+! set, list
+! 定义荷载工况组合,并输出图片和文件
+! lcdef从结果文件创建一个荷载工况
+*do, i, 1, 7
+    lcdef, i, i
+*enddo
+! 定义荷载工况的缩放系数1-2为1.0,3-7为1.1
+lcfact, 1, 1.0
+lcfact, 2, 1.0
+*do, i, 3, 7
+    lcfact, i, 1.1
+*enddo
+
+lczero  ! 对数据库中的荷载工况清零
+lcase, 1    ! 将荷载工况1读入到数据库中,1为定义的荷载工况号,lcdef, stat
+lcoper, add, 2  ! 将2加入1中
+
+! lcwrite写入数据到文件创建一个荷载工况
+! 将移动荷载步分别于(1+2结果相加)
+*do, i, 3, 7
+    j = i+5
+    lcoper, add, i
+    lcwrite, j, lc%j%
+    lcoper, sub, i
+*enddo
+
+/output, resfile0, txt
+/view, 1, 1, 2, 3
+/ang, 1, -6, xs, 1
+etable, stre, ls, 1
+etable, forc, smisc, 1
+*do, ic, 1, 12
+    /output, resfile%ic%, txt
+    lczero
+    lcase, ic
+    etable, refl
+    /show, jpeg
+    pletab, stre
+    pldisp, 1
+    /show, term
+    /com, ---荷载工况或组合%ic%的结果---
+    pretab
+    prrsol
+    prnsol, u
+*enddo
+/output

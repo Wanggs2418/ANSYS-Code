@@ -1,0 +1,73 @@
+! https://fscae.com/1796/
+! 当结构从位移加载变为力加载时，如何保证结构依然是在前面一步结果的基础上继续分析
+! 是结合ANSYS多点重启动来进行，思路如下：
+! 1、计算结构在前一步约束作用下的结构响应，并设置重启动文件；
+! 2、进入通用后处理，获取改变约束处的支座反力，并存储反力变量
+! 3、重开一个分析，设置分析类型为重启动，读入第一步的重启动文件，读取反力变量，删除或者减少指定约束并施加反力，增加新的荷载，继续分析。
+
+! 第一步：建立模型，求解结果在端部为100mm作用下的响应，并进行重启动设置。
+finish
+/clear
+/filname,qw
+/prep7
+et,1,beam189
+sectype,1,beam,rect
+secdata,10,20
+mp,ex,1,2.1e5
+mp,dens,1,7850e-12
+mp,prxy,1,0.3
+K,1,0
+k,2,3000
+L,1,2
+lesize,all,,,10
+lmesh,all
+d,1,all,0
+d,2,uy,-100
+d,2,ux,0,,,,uz,rotx,roty,rotz
+
+/solu
+antype,0
+kbc,0
+nlgeom,on
+! 重启动设置
+rescontrol,define,all,1
+time,1
+allsel,all
+nsubst,5
+solve
+save
+finish
+
+! 第二步：进入通用后处理，获取在欲删除支座约束处的支座反力，并存储变量
+/post1
+set,1,last
+*get,RFx,node,2,RF,fx
+*get,RFy,node,2,RF,fy
+*get,RFz,node,2,RF,fz
+*get,RRx,node,2,RF,rotx
+*get,RRy,node,2,RF,roty
+*get,RRz,node,2,RF,rotz
+allsel,all
+parsav,all,QW   ! parameter save,将参数写入文件
+
+! 第三步：新开分析，设置分析类型为重启动，读入第一步文件，读取保存的变量，删除约束，施加约束反力与新的荷载工况，
+! 意需要采用FCUM命令设置方式为迭加，默认为替换，不然后续施加的力会替换原来支座的反力。
+! 特别提示：重启动边界条件的删除只能通过节点操作来实现，所有的信息都保存在工作目录下一个后缀名为ldhi的文件中，也即你不能通过dadele、dkdele等命令实现，只能通过ddele命令实现。
+/clear
+/filname,qw
+/solu
+nsubst,5
+antype,,rest,1
+parres,new,QW
+time,2
+ddele,2,all
+f,2,fx,RFx
+f,2,fy,RFY
+f,2,fy,RFY
+f,2,rotx,RRX
+f,2,roty,RRy
+f,2,rotz,RRz
+fcum,add
+F,2,FY,-10e3
+allsel,all
+solve

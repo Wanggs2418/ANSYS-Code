@@ -1,0 +1,83 @@
+! Ex5.1结果处理方式-P302
+finish
+/clear
+/prep7
+! 1.建模，施加荷载，施加约束
+et, 1, plane82
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+blc4,,, 60, 40
+cyl4, 30, 20, 10
+asba, 1, 2
+! 十字形切分截面
+wprota,, 90
+wpoffs,,, -20
+asbw, all
+wpoffs, 30
+wprota,,, 90
+asbw, all
+wpcsys, -1
+! 划分网格
+lccat, 14, 15
+lccat, 9, 16
+lccat, 2, 13
+lccat, 10, 18
+esize, 2
+mshape, 0, 2d
+mshkey, 1
+amesh, all
+! 施加荷载
+lsel, s, loc, x, 0
+lsel, a, loc, x, 60
+sfl, all, pres, -100
+lsel, s, loc, x, 30
+! 施加约束
+dl, all,, ux
+lsel, s, loc, y, 20
+dl, all,, uy
+allsel
+! 查看
+! /pbc, all,, 1
+! /pbc, u,, 1
+! /pbc, pres,, 1
+
+! 求解并进入求解层
+finish
+/solu
+solve
+
+! 后处理操作
+/post1
+/efacet, 2  ! 设置单元边界分段数，精确显示边界
+/gformat, f, 15, 6  ! 设置刻度尺数字显示格式为F15.6
+pldisp, 1   ! 显示变形前后的图
+plnsol, u, y, 2
+/gformat, f, 15, 2
+plnsol, s, x
+plnsol, s, 1    ! 显示主应力1
+plnso, s, eqv   ! 显示等效应力
+/gformat, e, 12, 6
+plnsol, epel, x ! 显示x方向的弹性应变
+
+! 显示单元的uy,sx,seqv
+/gformat, defa  ! 恢复默认格式
+plesol, u, y
+plesol, s, x
+plesol, s, eqv
+! 位移和应力矢量图
+plvect, u
+plvect, s
+plvect, s,,,, vect
+/vscale,, 2 ! 调整向量显示的大小
+plvect, s,,,, vect
+/gline,, -1 ! 取消单元边线
+plvect, s   ! 再次显示应力向量
+/dscale,, off   ! 关闭结构变形
+plnsol, s, 1
+/dscale, defa  ! 恢复变形缺省模式
+/gline, 1   ! 恢复单元边线
+/device, vector, 1  ! 设置显示模式
+/clabel,, 5 ! 设置等高线上的文字距离(5个单元显示一个)
+/contour,, 18, -16,, 500    ! 设置等高线为18，最小和最大为-16和500
+plnsol, s, x    ! 显示节点x方向的应力
+/device, vector, 0

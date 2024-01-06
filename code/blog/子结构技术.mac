@@ -1,0 +1,71 @@
+! https://www.fangzhenxiu.com/post/1152566/
+! 解决大规模计算问题
+
+! 1.生成子结构（超单元）
+FINISH
+/CLEAR
+/FILNAME,CREAT
+/PREP7
+! 生成子结构部分模型
+/SOLU
+ANTYPE,SUBST!子结构分析
+SEOPT,MYZJG!子结构名及选项
+M,……!主自由度
+D,……!荷载
+SAVE!保存数据库文件CREAT.DB
+SOLVE!生成MYZJG.SUB文件
+!===========================
+
+! 2.使用子结构
+FINISH
+/CLEAR
+/FILNAME,USEFJG!文件名自定义
+/PREP7
+ET,1,MATRIX50 ! 超单元类型
+ET,2,……!非超单元的单元类型
+! 生成非超单元部分模型
+TYPE,1!指向超单元类型
+SETRAN,……!从既有子结构文件创建一个超单元
+SE,……!定义由SETRAN创建的超单元
+NSEL,……!选择超单元界面结点
+CPINTF,ALL!耦合结点
+! 耦合超单元与非超单元节点自由度
+ALLSEL,ALL
+/SOLU!进入求解层
+ANTYPE,……!分析类型和分析选项
+……
+D,……!非超单元上的载荷
+SFE,……!施加超单元载荷向量
+SAVE!存储数据库文件
+SOLVE
+FINISH
+/POST1
+PLNSOL,U,SUM!查看整体模型的非超单元结果
+!==========================
+
+! 3.扩展子结构中的结果
+FINISH
+/CLEAR
+/FILNAME,CREAT!切换到生成部分文件名
+RESUME!读入生成部分数据库
+/ASSIGN,RST,MYZJG1,RST!将计算后的结果文件保存为MYZJG1.RST
+/SOLU!求解开始
+EXPASS,ON!激活扩展选项
+SEEXP,MYZJG1,USEFJG!要扩展的子结构名（MYZJG1）
+SOLVE
+FINISH!
+/POST1
+PLNSOL,S,X!查看子结构MYZJG1的解
+! 重复上述步骤，扩展所有子结构的解
+!========================
+
+! 4.在整个模型中查看子结构结果
+FINISH
+/CLEAR!!!
+/FILNAME,USEFJG!切换到使用部分文件名
+RESUME
+/POST1!进入后处理
+ZJ=5!假定为第5个子结构
+CMSFILE,ADD,MYZJG%ZJ%,RST,OFF!添加某个子结构的结果
+SET,LAST
+PLNSOL,S,X

@@ -1,0 +1,76 @@
+! EX14.2 平行薄壁管的扭绞 P501
+! 刚性梁单元 kop1=1
+finish
+/clear
+/prep7
+r0 = 10
+l0 = 250
+t0 = 5.0    ! 壁厚越厚，截面的周边变形越小，计算速度越快
+et, 1, shell181
+et, 2, targe170
+et, 3, conta173
+et, 4, mpc184, 1
+keyopt, 3, 10, 1
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+tb, biso, 1
+tbdata, 1, 200, 1e4
+r, 1, t0
+r, 2,,, 0.1,,, -5
+! 创建几何模型
+cyl4,,, r0,,,, l0
+vgen, 2, 1,,,, 2*r0
+vdele, all  ! 删除体
+asel, s, loc, z, 0
+asel, a, loc, z, l0
+adele, all  ! 删除顶面和底面
+asel, all
+wprota,,, 90
+asbw, all
+wpcsys, -1
+lsel, s, loc, z, 0
+lesize, all,,, 6
+lsel, all
+esize, 4
+mshkey, 1
+aatt, 1, 1, 1
+amesh, all
+
+! 创建接触对
+asel, s, loc, y, -r0, r0
+nsla, s, 1
+type, 2
+real, 2
+esurf
+asel, s, loc, y, r0, 3*r0
+nsla, s, 1
+type, 3
+real, 2
+esurf
+
+! 创建刚性梁单元,采用MPC184-1模拟端部圆周
+lsel, s, loc, z, l0
+type, 4
+lmesh, all
+nsel, s, loc, z, 0
+d, all, all
+allsel, all
+ksel, s, loc, y, r0
+ksel, r, loc, x, 0
+ksel, r, loc, z, l0
+dk, all, all
+dk, all, rotz, 4*acos(-1)   ! 选择接触点赋予转动位移
+allsel, all
+
+! 求解后制作变形动画
+/solu
+nlgeom, on
+outres, all, all
+nsubst, 100,, 20
+cnvtol, f,, 0.02
+solve
+
+/post1
+plnsol, u, sum
+antime, 30, 0.2
+

@@ -1,0 +1,68 @@
+! EX2.5-几何建模技巧，P130
+! 1.角度单位
+pi = acos(-1) ! PI = 3.1415926
+a1 = sin(pi/6) 
+! 弧度制转换为角度制
+*afun, deg
+pi1 = acos(-1)
+a2 = sin(30)
+
+! 2.图片保存-P133
+finish
+/clear
+/prep7
+/view, 1, 1, 1, 1
+blc4,,, 1, 2, 3
+! 采用 /show 命令定向显示设备
+/show, jpeg ! 图像定向到 jpeg文件,接下来每次显示都会产生一张图片
+kplot   ! 创建的文件名称为 jobnamennn.jpeg
+/show, close    ! 关闭图像定向到jpeg
+
+! 3.模型动画-avi文件无法播放
+finish
+/clear
+/prep7
+/view, 1, 1, 1, 1
+cyl4,,, 1,, 1.1, 220, 2
+! 颜色显示面积
+/pnum, area, 1
+/number, 1
+/triad, off
+/plopts, info, off  ! 关闭图例
+aplot
+! 删除当前所储存的段，防止出现混乱
+/seg, delet
+/seg, multi, demo1, 1   ! 独立段存储且不覆盖
+! 循环改变角度
+*do, i, 1, 24
+    /angle, 1, 15, ys, 1
+    /replot
+*enddo
+/seg, off   ! 关闭段存储操作
+/anfile, save, demo1, avi ! 保存为demo1.avi文件
+/anfile, resume, demo1, avi
+
+! 4.模型移动，旋转与装配-P134
+! 利用 xGEN (x=K, L, A, V, N, E)
+finish
+/clear
+/prep7
+/view, 1, 1, 2, 3
+! 柱墩和承台
+blc4, 6, 6, 4, 2, 4
+cyl4,,, 1,,,, 6
+local, 12, 1,,,,,, 90
+vgen, 1, 2,,,, 90,,,, 1
+csdele, 12
+vgen, 1, 2,,, 0, 8, 0,,, 1
+vgen, 1, 1,,, -8, -6, -2,,, 1
+vglue, all
+
+! 5.查询函数-P135
+cs_stat = csyiqr(11, 1) ! 状态，返回值为1表示已经定义
+cs_num = csyiqr(0, 12)    ! 定义的局部坐标系数目
+cs_max = csyiqr(0, 14)    ! 定义的局部坐标最大值
+! 警告和错误
+numnot = erinqr(3)  ! 
+numwrn = erinqr(4)
+

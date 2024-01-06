@@ -1,0 +1,58 @@
+! EX14.18 车载转动体机构分析 P530
+finish
+/clear
+/prep7
+a = 0.25
+b = 0.5
+r = 0.2
+lw = 8*acos(-1)
+et, 1, mpc184, 1, 1 ! kop1=1,kop2=1，刚性梁单元
+et, 2, mpc184, 12   ! 面连接单元
+et, 3, mpc184, 10
+n, 1
+n, 2, a, -a
+n, 3, -a, -a
+n, 4,, b
+n, 5, r, b
+n, 6, r, b+a
+type, 1 ! 刚性梁单元
+e, 1, 2
+e, 1, 3
+e, 4, 5
+e, 5, 6
+
+! 连接设置
+local, 12,,,,, 90   ! 绕z轴转90
+sectype, 1, joint, plan    ! 平面连接
+secjoint, lsys, 12
+type, 2
+secnum, 1
+e, 1, 4     ! 连接A，D实现面连接单元
+! 获取最大的单元编号，即刚创建的面连接单元
+*get, eplan, elem,, num, max    
+local, 13
+sectype, 2, joint, pris ! 平移联合
+secjoint, lsys, 13
+type, 3
+secnum, 2
+e, 3
+! 配置连接单元的约束 d-joint,再局部坐标系12中绕rotx转8圈
+! 局部坐标系的x方向即为AD方向
+dj, eplan, rotx, lw
+d, 2, all
+d, 2, ux, b
+
+! 求解
+/solu
+time, 1
+nlgeom, on
+outres, all, all
+nsubst, 100,, 50
+solve
+
+! 后处理
+/post1
+plnsol, u, sum
+antime, 30, 0.1
+
+

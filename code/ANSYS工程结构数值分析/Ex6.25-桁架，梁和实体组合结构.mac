@@ -1,0 +1,108 @@
+! 实体结构为C40混凝土，不考虑非线性
+! 桁架杆件为Φ160×8mm的钢管
+! 梁柱为焊接H型钢
+! 使用公共节点连接
+
+finish
+/clear
+/prep7
+l1 = 0.8
+l2 = 2
+l3 = 1
+h1 = 3
+h2 = 1.2
+b = 1.5
+err = 0.1
+et, 1, solid95  ! 3D20节点结构实体单元，每个节点3个自由度
+et, 2, link8    ! 3D杆单元，每个节点3个自由度
+et, 3, beam4    ! 3D弹性梁单元，每个节点6各自由度
+! 钢的弹模2.1e5Mpa,泊松比0.3
+! 混凝土33Gpa,0.2
+mp, ex, 1, 3.3e10
+mp, prxy, 1, 0.2
+mp, ex, 2, 2.1e11
+mp, prxy, 2, 0.3
+
+r, 1, 0.25*acos(-1)*(0.16*0.16-0.144*0.144)
+r, 2, 0.00908, 2.14e-3, 1.45e-2, 0.3, 0.2
+rmore,, 6.52e-5
+r, 3, 0.00908, 1.45e-2, 2.14e-3, 0.2, 0.3
+rmore,, 6.52e-5
+/view, 1, 1, 1, 1
+/angle, 1, -120, zs, 1
+blc4,,, l1, b, h1
+wpoffs,,, h1-h2
+vsbw, all   ! 切分下界限
+wpcsys, -1
+
+! 创建桁架，梁
+k, 20, l1+l2,, h1
+k, 21, l1+l2+l3,, h1
+k, 22, l1+l2+l3*2,, h1
+k, 23, l1+l2+3*l3,, h1
+k, 24, l1+l2, b, h1
+k, 25, l1+l2+l3, b, h1
+k, 26, l1+l2+2*l3, b, h1
+k, 27, l1+l2+3*l3, b, h1
+k, 28, l1+l2+3*l3, b/2, h1
+k, 29, l1+l2+3*l3, b/2
+! 连线
+l, 6, 20
+l, 12, 20
+l, 20, 21
+l, 21, 22
+l, 22, 23
+l, 7, 24
+l, 11, 24
+l, 24, 25
+l, 25, 26
+l, 26, 27
+l, 6, 24
+l, 20, 24
+l, 21, 25
+l, 22, 26
+l, 23, 28
+l, 28, 27
+l, 28, 29
+! 施加约束
+dk, 29, all
+da, 1, all
+ksel, s,,, 20, 23
+fk, all, fz, -3e4   !4个点分别施加30kN
+ksel, s,,, 24, 27
+fk, all, fz, -2e4
+ksel, all
+fk, 23, fx, 1e4
+fk, 27, my, 1000
+esize, 0.2
+mshape, 0
+mshkey, 1
+vatt, 1,, 1
+vmesh, all
+! 划分线
+lsel, s, loc, x, l1+err, l1+l2
+lsel, a, loc, x, l1+l2+l3
+lsel, a, loc, x, l1+l2+2*l3
+cm, linkline, line
+latt, 2, 1, 2
+lesize, all,,, 1
+lmesh, all
+lsel, s, loc, x, l1+l2+err, l1+l2+l3*3
+cmsel, u, linkline
+lsel, u, loc, z, 0, h1-err
+latt, 2, 2, 3
+lesize, all,,, 4
+lmesh, all
+lsel, s, loc, x, l1+l2+3*l3
+lsel, r, loc, z, 0, h1-err
+latt, 2, 3, 3
+lesize, all,,, 4
+lmesh, all  ! 划分柱子竖线
+allsel, all
+finish
+
+/eshape, 1
+
+
+
+
