@@ -1,0 +1,7 @@
+! 不考虑温度时Q235钢材命令流 P443
+/prep7
+mp, ex, 1, 2.1e11
+tb, bkin, 1
+tbdata, 1, 235e6, 7.9e8
+tbplot, bkin, 1
+tblist, bkin, 1

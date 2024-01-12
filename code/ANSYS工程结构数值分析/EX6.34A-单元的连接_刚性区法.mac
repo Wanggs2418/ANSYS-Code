@@ -1,4 +1,5 @@
 ! EX6.34A 3D 梁单元与 3D 实体单元连接——刚性区法,P398
+! 使用共用节点和关键点
 finish
 /clear
 /prep7
@@ -17,6 +18,7 @@ mp, prxy, 1, 0.3
 r, 1, A1, I1, I2, b, h
 ! 创建实体
 blc5,,, b, h, l1
+! 切分实体，形成关键点
 wprota, 0, 90
 vsbw, all
 wprota,,, 90
@@ -31,7 +33,7 @@ lesize, all,,, 10
 lmesh, all
 vatt, 1,, 1
 esize, 2.5
-mshape, 1
+mshape, 1   ! 1-三角形
 lsel, s, loc, z, 1, l1-1    ! 选择实体部分
 lesize, all, b/2
 vmesh, all
@@ -40,8 +42,9 @@ da, all, all
 fk, 100, fx, 100
 fk, 100, fy, -200
 nsel, s, loc, z, l1
-cerig, 1, all
+cerig, 1, all   ! 节点1为连接端面的中心点
 allsel
+
 ! 选择连接截面节点，创建刚性域
 /solu
 nlgeom, 1

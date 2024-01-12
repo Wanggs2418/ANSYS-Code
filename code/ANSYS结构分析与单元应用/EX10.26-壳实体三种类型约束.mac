@@ -1,0 +1,128 @@
+! EX10.26 三种约束类型实现壳-实体专配的悬臂梁分析 P443
+! shsd 是采用实体-实体和壳-壳约束类型实现壳-实体装配的网格工具
+! 仅适用于 conta175及targe170 接触对
+! shsd 自动创建附加壳单元(shell181)和接触单元(conta175)
+! 前期的几何模型和约束
+finish
+/clear
+/prep7
+b = 400
+h = 600
+l = 3000
+p = 6e5
+et, 1, solid45  ! 不包含中间节点
+et, 2, shell63
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.0
+r, 1
+r, 2, h
+r, 3
+blc4,,, b, h, l
+wpoffs,, h/2
+wprota,, 90
+blc4,, l, b, l
+wpcsys, -1
+vatt, 1, 1, 1
+esize, b/4
+vmesh, all
+
+asel, s, loc, z, 1.1*l, 2*l
+aatt, 1, 2, 2
+esize, b/5
+amesh, all
+nsel, s, loc, z, 2*l
+*get, nnum, node,, count
+f, all, fy, -p/nnum
+nsel, s, loc, z, 0
+d, all, all
+allsel, all
+save, gfmod, db
+
+! 1.实体-实体类型实现壳-实体装配
+! 需使用 SHSD 工具
+! 装配的界面需要附加壳单元
+et, 3, targe170
+et, 4, conta175
+keyopt, 3, 5, 1 ! 对目标单元选择实体-实体类型
+keyopt, 4, 2, 2 ! MPC方法
+keyopt, 4, 12, 5    ! 永远绑定设置
+! 定义接触对
+nslv, s, 1
+nsel, r, loc, z, l
+type, 3
+real, 3
+esurf
+esel, s, type,, 2
+nsle, s
+nsle, r, loc, z, l
+type, 4
+esurf
+allsel, all
+shsd, 3, creat  ! 创建附加壳单元和附加接触单元
+! 求解设置
+/solu
+solve
+celist,,,, inte
+/post1
+plnsol, u, y
+plnsol, s, z
+
+! 2.壳-壳约束类型实现壳-实体装配，同样需要shsd工具
+! 恢复数据库
+resume, gfmod, db
+/prep7
+et, 3, targe170
+et, 4, conta175
+keyopt, 3, 5, 2 ! 壳-壳装配
+keyopt, 4, 2, 2 ! MPC方法
+keyopt, 4, 12, 5    ! 永久绑定
+
+! 定义接触对
+nslv, s, 1
+nsel, r, loc, z, l
+type, 3
+real, 3
+esurf
+esel, s, type,, 2
+nsle, s
+nsel, r, loc, z, l
+type, 4
+esurf
+allsel, all
+shsd, 3, creat
+! 求解设置
+/solu
+solve
+celist,,,, inte
+/post1
+plnsol, u, y
+plnsol, s, z
+
+! 3.用壳-实体约束实现壳-实体装配
+resume, gfmod, db
+/prep7
+et, 3, targe170
+et, 4, conta175
+keyopt, 3, 5, 3 ! 壳-实体装配
+keyopt, 4, 2, 2 ! MPC方法
+keyopt, 4, 12, 5    ! 永久绑定
+nslv, s, 1
+nsel, r, loc, z, l
+type, 3
+real, 3
+esurf
+esel, s, type,, 2
+nsle, s
+nsel, r, loc, z, l
+type, 4
+esurf
+allsel, all
+! 求解设置
+/solu
+solve
+celist,,,, inte
+/post1
+plnsol, u, y
+plnsol, s, z
+
+! rbe3

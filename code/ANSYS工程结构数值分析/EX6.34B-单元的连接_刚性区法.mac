@@ -1,0 +1,48 @@
+! EX6.34B 3D 梁单元与 3D 实体单元连接——刚性区法,P399
+! 不共用关键点，不用切分实体,更通用
+finish
+/clear
+/prep7
+b = 10
+h = 20
+l1 = 100
+l2 = 150
+! 截面特性
+A1 = b*h
+I1 = b*h**3/12
+I2 = h*b**3/12
+et, 1, solid95
+et, 2, beam4
+mp, ex, 1, 3e5
+mp, prxy, 1, 0.3
+r, 1, A1, I1, I2, b, h
+! 创建实体
+blc5,,, b, h, l1
+! 创建两个关键点和线
+k, 99,,, l1
+k, 100,,, l1+l2
+l, 99, 100
+lsel, s, loc, z, l1+1, l1+l2
+latt, 1, 1, 2
+lesize, all,,, 10
+lmesh, all
+vatt, 1,, 1
+esize, 2.5
+mshape, 1
+lsel, s, loc, z, 1, l1-1    ! 选择实体部分
+lesize, all, b/2
+vmesh, all
+asel, s, loc, z, 0
+da, all, all
+fk, 100, fx, 100
+fk, 100, fy, -200
+nsel, s, loc, z, l1
+cerig, 1, all   ! 节点1为连接端面的中心点
+allsel
+
+! 选择连接截面节点，创建刚性域
+/solu
+nlgeom, 1
+solve
+/post1
+pldisp, 1

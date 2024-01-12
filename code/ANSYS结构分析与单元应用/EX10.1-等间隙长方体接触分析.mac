@@ -12,7 +12,8 @@ et, 1, solid95
 et, 2, conta174
 et, 3, targe170
 ! keyopt(5)=4,自动ICONT闭合间隙
-keyopt, 2, 5, 4
+! keyopt, 2, 5, 4
+! keyopt, 2, 4, 2
 ! 实常数采用默认值,法向接触刚度系数fkn=1.0,侵入容差系数ftoln=0.1
 r, 1
 r, 2

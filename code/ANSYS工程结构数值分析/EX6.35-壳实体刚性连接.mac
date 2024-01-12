@@ -16,13 +16,14 @@ mp, prxy, 1, 0.2
 r, 1, t
 blc4,,, b, h, l1
 wpoffs,, h-t/2, l1
-wprota,, 90
+wprota,, 90 ! 为减少约束方程数量，建模时使用壳单元和体单元的共用节点
 vsbw, all
 blc4,,, b, l2
 nummrg, all ! 创建面，粘结图素
 vatt, 1,, 1
 esize, t/2
 vmesh, all
+
 asel, s, loc, z, l1+t, l1+l2
 aatt, 1, 1, 2
 amesh, all
@@ -36,9 +37,13 @@ allsel, all ! 选择面，施加约束
 nsel, s, loc, z, l1
 nsel, r, loc, y, h-t, h
 cm, nodcm, node
+
+! 壳单元为主节点，体单元为从节点
+! cerig, i, all, ux, uz, uy 结果与值一样，应为 uy=uy
 *do, i, 1, 29
     cmsel, s, nodcm
     nsel, r, loc, x, nx(i)
+    ! cerig, i, all, ux, uz, uy
     cerig, i, all, ux, uz
 *enddo
 allsel, all

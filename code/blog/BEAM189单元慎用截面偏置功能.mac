@@ -1,0 +1,60 @@
+! https://www.fangzhenxiu.com/post/1891878/
+! 在节点（定义单元x轴）上施加外荷载时，如果质心轴与单元x轴不共线，则所施加的轴力荷载将导致弯曲；
+! 当截面的质心与剪心不重合时，施加的剪切荷载将导致扭转应变和力矩
+finish
+/clear
+/prep7
+l1 = 3000
+l2 = 400
+h1 = 500
+h2 = 200
+h3 = h1-(h1-h2)/3000*h1 ! 变截面高度
+b = 300
+esiz = 100
+fy0 = 6e5
+px0 = 80
+
+! 不使用偏置，在质心轴上建模
+k, 1
+k, 2, h1, (h1-h3)/2
+k, 3, l1, (h1-h2)/2
+k, 4, l1+l2, (h1-h2)/2
+k, 5, l1+l2, h1
+l, 1, 2
+l, 2, 3
+l, 3, 4 ! 折线段
+
+et, 1, beam189
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+sectype, 1, beam, rect
+secdata, b, h1
+sectype, 2, beam, rect
+secdata, b, h2
+! 变截面
+sectype, 3, taper
+secdata, 1, 0
+secdata, 2, l1
+
+! 网格划分
+lsel, s,,, 1, 2
+latt, 1,, 1,,, 5, 3
+lsel, s,,, 3
+latt, 1,, 1,,, 5, 2
+lsel, all
+esize, esiz
+lmesh, all
+! 约束及荷载
+dk, 1, all
+fk, 4, fx, -px0*b*h2
+fk, 4, fy, -fy0
+
+! 求解设置
+/solu
+solve
+/post1
+/eshape, 1
+plnsol, u, y
+esel, s, cent, x, h1, h1, esiz
+plnsol, s, x
+
