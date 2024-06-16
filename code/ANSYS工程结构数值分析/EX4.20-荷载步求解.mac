@@ -1,0 +1,37 @@
+! EX4.20-荷载步求解,在前一次的基础上求解
+finish
+/clear
+/prep7
+l = 1000
+b = 10
+h = 20
+et, 1, beam3
+mp, ex, 1, 2.0e5
+mp, prxy, 1, 0.3
+r, 1, b*h, b*h*h*h/12, h
+k, 1
+k, 2, l
+l ,1, 2
+lesize, all,,, 10
+lmesh, all
+d, 1, all
+
+! 求解
+/solu
+antype, 0
+nlgeom, on
+! monitor
+! outres, all, all
+time, 1
+nsubst, 10
+f, 2, fy, -1000
+! outres, all, all
+lswrite, 1
+time, 2
+f, 2, fy, -2000
+lswrite, 2
+lssolve, 1, 2
+
+! 后处理设置
+/post1
+plnsol, s, eqv

@@ -1,0 +1,45 @@
+! EX9.2-质点的斜抛运动 P373
+! 瞬态分析设置
+finish
+/clear
+/prep7
+! 初速度300m/s，质量45kg，抛射角30°
+v0 = 300
+m = 45
+ref = 30
+g = 9.81
+pi0 = acos(-1)/180
+! 空中的飞行时间
+tend = 2*v0*sin(ref*pi0)/g
+et, 1, mass21
+keyopt, 1, 3, 4
+r, 1, m
+n, 1
+e, 1
+
+! 求解设置
+/solu
+antype, trans
+outres, all, all
+time, 32
+nsubst, 200,, 50
+! initial conditions设置初始条件
+ic, all, ux,, v0*cos(ref*pi0)
+ic, all, uy, v0*sin(ref*pi0)
+! 设置惯性力,注意坐标系的方向
+acel,, g
+solve
+
+! 时程曲线后处理
+/post26
+! 将ux和uy设置为变量2,3
+nsol, 2, 1, u, x
+nsol, 3, 1, u, y
+xvar, 2
+plvar, 3
+! 获取斜抛的最大高程，即变量3的最大值
+*get, h, vari, 3, extrem, vmax
+/post1
+! 切换到计算的最后时间点
+set,,,,, tend
+d = ux(1)

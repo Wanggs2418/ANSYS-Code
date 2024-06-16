@@ -1,0 +1,55 @@
+! EX10.29 实体施加扭矩 P447
+! 对比刚性约束面：接触单元 keyopt(4)=2 和荷载分配约束面 keyopt(4)=1 的求解区别
+
+finish
+/clear
+/prep7
+r0 = 210
+l0 = 1600
+h = 500
+t = 8e6
+et, 1, plane42
+et, 2, targe169
+et, 3, conta171
+keyopt, 2, 2, 1 ! 导向节点约束条件用户自定义
+keyopt, 3, 2, 2 ! MPC算法
+! keyopt, 3, 4, 1 ! 荷载分配约束面，不影响刚度
+keyopt, 3, 4, 2 ! 刚性约束面
+keyopt, 3, 12, 5
+mp, ex, 1, 2e4
+mp, prxy, 1, 0.3
+! 创建模型
+blc5,,, l0, h
+cyl4,,, r0
+asba, 1, 2
+smrtsize, 3
+aatt, 1, 1, 1
+amesh, all
+lsel, s, radius,, r0
+nsll, s, 1
+type, 3
+real, 2
+esurf
+
+nmax = ndinqr(0, 14)+1
+n, nmax
+type, 2 ! targe170
+tshap, pilo
+e, nmax
+
+! 施加边界条件并求解
+f, nmax, mz, -t
+nsel, s, loc, x, -l0/2
+d, all, all
+allsel, all
+/solu
+nlgeom, on
+nsubst, 20
+outres, all, all
+solve
+celist,,,, inte ! 列出基于mpc接触相关内部生成的约束方程-interally
+
+! 后处理
+/post1
+plnsol, u, sum
+plnsol, s, eqv

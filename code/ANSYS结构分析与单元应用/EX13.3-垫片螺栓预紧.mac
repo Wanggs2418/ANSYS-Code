@@ -1,0 +1,131 @@
+! EX13.3-垫片螺栓预紧
+! conta178点-点接触单元
+! 模拟节点间的接触和滑移状态,单元包含2个节点，每个节点3个自由度(平动)
+
+finish
+/clear
+/prep7
+et, 1, plane82
+et, 2, beam189
+et, 3, beam189
+et, 4, conta178
+keyopt, 4, 2, 3 ! 接触算法采用混合法
+keyopt, 4, 5, 2 ! 接触法向,节点坐标系y方向余弦
+mp, ex, 1, 1400
+mp, prxy, 1, 0.35
+mp, ex, 2, 2.1e5
+mp, prxy, 2, 0.3
+sectype, 100, beam, rect
+secdata, 50, 50
+sectype, 101, beam, rect
+secdata, 25, 25
+
+! 几何模型
+blc4,,, 50, 50
+blc4, 75,, 100, 50
+blc4, 200,, 100, 50
+blc4, 325,, 50, 50
+aatt, 1,, 1
+esize, 5
+amesh, all
+
+! 创建刚性梁
+k, 50, 62.5, 50
+k, 51, 187.5, 50
+k, 52, 312.5, 50
+k, 53, 200, 200
+l, 3, 50
+l, 50, 8
+l, 7, 51
+l, 51, 12
+l, 11, 52
+l, 52, 16
+lsel, s, loc, y, 50
+latt, 2,, 2,,, 53, 100
+esize, 5
+lmesh, all
+
+! 创建并划分网格
+lsel, none
+k, 150, 62.5
+k, 151, 187.5
+k, 152, 312.5
+k, 153, 62.5, 50
+k, 154, 187.5, 50
+k, 155, 312.5, 50
+l, 150, 153
+l, 151, 154
+l, 152, 155
+latt, 2,, 3,,, 1, 101
+esize, 10
+lmesh, all
+
+! 施加边界条件
+lsel, s, loc, y, 0
+dl, all,, uy
+ksel, s, loc, y, 0
+ksel, r, loc, x, 50, 325
+dk, all, ux
+ksel, s,,, 150, 152
+dk, all, uy,,,, uz
+ksel, s, loc, x, 62.5
+dk, all, ux
+ksel, s, loc, x, 187.5
+dk, all, ux
+ksel, s, loc, x, 312.5
+dk, all, ux
+lsel, s, loc, y, 50
+dl, all,, uz
+allsel, all
+
+! 定义接触单元
+type, 4
+nsel, s, loc, y, 50
+nsel, r, loc, x, 62.5
+*get, n1, node,, num, min
+n2 = ndnext(n1)
+e, n1, n2
+nsel, s, loc, y, 50
+nsel, r, loc, x, 187.5
+*get, n1, node,, num, min
+n2 = ndnext(n1)
+e, n1, n2
+nsel, s, loc, y, 50
+nsel, r, loc, x, 312.5
+*get, n1, node,, num, min
+n2 = ndnext(n1)
+e, n1, n2
+allsel, all
+
+! 施加预紧力
+nsel, s, loc, x, 62.5
+esln, s
+esel, r, type,, 3
+psmesh, 1, bolt1,, all,,, y, 25
+
+nsel, s, loc, x, 187.5
+esln, s
+esel, r, type,, 3
+psmesh, 2, bolt2,, all,,, y, 25
+
+nsel, s, loc, x, 312.5
+esln, s
+esel, r, type,, 3
+psmesh, 3, bolt3,, all,,, y, 25
+allsel, all
+
+! 求解
+/solu
+sload, 1, 9, tiny, forc, 1e4, 2, 3
+sload, 3, 9, tiny, forc, 1.15e4, 3, 4
+sload, 2, 9, tiny, forc, 0.77e4, 4, 5
+*do, i, 1, 5
+    time, i
+    solve
+*enddo
+
+! 后处理
+/post1
+esel, s, type,, 3
+/eshape, 1
+plnsol, s, x

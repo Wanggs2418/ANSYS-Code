@@ -1,0 +1,65 @@
+! EX3.3 方位关键点
+! 1.方位点的不可复制性
+finish
+/clear
+/prep7
+et, 1, beam189
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+sectype, 1, beam, i
+secdata, 100, 40, 160, 10, 10, 8
+k, 1
+k, 2,,, 1000
+l, 1, 2
+k, 100,, 500, 500
+latt, 1,, 1,, 100,, 1
+lgen, 4, 1,,, 500   ! 注意方位点不能同时复制，其他的则可以复制
+lesize, all,,, 10
+lmesh, all
+
+! 2.L形截面方位设置
+finish
+/clear
+/prep7
+et, 1, beam188
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+sectype, 1, beam, L
+secdata, 110, 110, 8, 8
+k, 1
+k, 2,,, 1000
+l, 1, 2
+k, 100, 500
+latt, 1,, 1,, 100,, 1
+lgen, 4, 1,,, 500   ! 注意方位点不能同时复制，其他的则可以复制
+lesize, all,,, 10
+lmesh, all
+
+! 3.L形截面方位设置,分段截面
+finish
+/clear
+/prep7
+et, 1, beam188
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+sectype, 1, beam, L
+secdata, 110, 110, 8, 8
+! 属性2
+mp, prxy, 2, 0.3
+sectype, 2, beam, L
+secdata, 40, 40, 3, 3
+
+k, 1
+k, 2,,, 1000
+k, 3,,, 2000
+k, 100, 500
+l, 1, 2
+l, 2, 3
+lsel, s, line,, 1
+latt, 1,, 1,, 100,, 1
+lsel, s, line,, 2
+latt, 2,, 1,, 100,, 2
+lsel, all
+lesize, all,,, 10
+lmesh, all
+

@@ -1,0 +1,61 @@
+! EX4.06-简谐运动下单自由度瞬态动力分析 P105
+! 直接加载分析
+finish
+/clear
+/config, nres, 5000
+/prep7
+k = 1000
+m = 10
+c = 15
+p0 = 40
+uomg = 5
+et, 1, combin14,,, 2
+et, 2, mass21,,, 4
+r, 1, k, c
+r, 2, m
+n, 1
+n, 2, 1
+! 弹簧单元
+type, 1
+real, 1
+e, 1, 2
+! 质量单元
+type, 2
+real, 2
+e, 2
+d, 1, all
+d, all, uy
+
+! 瞬态动力分析
+/solu
+antype, trans
+trnopt, full
+timint, on
+autots, on
+outres, all, all
+! 第一个荷载步,建立初始条件
+time, 1e-6
+kbc, 1  ! 阶跃
+nsubst, 2
+f, 2, fx, p0*cos(umog*1e-6)
+solve
+! 其余荷载步为渐变荷载
+! 直接加载，时间步长0.01
+kbc, 0
+nsubst, 2
+*do, it, 0.01, 7, 0.01
+    time, it
+    f, 2, fx, p0*cos(uomg*it)
+    solve
+*enddo
+finish
+
+! 后处理
+/post26
+nsol, 2, 2, u, x
+plvar, 2
+nsol, 3, 2, a, x
+plvar, 3
+force, total
+rforce, 4, 1, f, x
+plvar, 4

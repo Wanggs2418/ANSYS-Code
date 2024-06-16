@@ -1,0 +1,51 @@
+! EX4.19-静态非线性分析 P119
+! 对比慢动力分析EX4.18
+finish
+/clear
+/prep7
+l = 2.0
+k1 = 700
+k2 = 200
+f = 500
+cita = 30
+m = 10
+et, 1, combin14,,, 2
+et, 2, mass21,,, 4
+r, 1, k1
+r, 2, k2
+r, 3, m
+n, 1
+n, 2,, l
+n, 3,, 2*l
+! 默认为type=1,弹簧
+real, 1
+e, 2, 3
+real, 2
+e, 1, 2
+! 质量单元
+type, 2
+real, 3
+e, 2
+d, 1, all
+d, 3, all
+finish
+
+! 非线性静态分析
+/solu
+antype, static
+nlgeom, on
+outres, all, all
+autots, on
+kbc, 0  ! 斜坡
+f, 2, fx, f*cos(cita/180*acos(-1))
+f, 2, fy, f*sin(cita/180*acos(-1))
+time, 1
+nsubst, 100,, 50
+solve
+finish
+
+! 位移-时程曲线
+/post26
+nsol, 2, 2, u, x
+nsol, 3, 2, u, y
+plvar, 2, 3

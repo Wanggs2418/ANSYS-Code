@@ -1,0 +1,34 @@
+! EX2.10-有应力模态分析 P30
+finish
+/clear
+/prep7
+! 定义单元类型等参数
+et, 1, beam3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+mp, dens, 1, 7800
+r, 1, 0.06, 0.0002, 0.2
+k, 1
+k, 2,, 6
+l, 1, 2
+lesize, all,,, 20
+lmesh, all
+! 施加约束和荷载
+dk, 1, all
+fk, 2, fy, -6e6
+fk, 2, fx, 5e6
+finish
+
+! 先进行静力分析
+/solu
+antype, 0   ! static
+nsubst, 10
+pstres, on
+solve
+finish
+
+! 进行有应力模态分析
+/solu
+antype, 2   ! modal
+pstres, on
+modopt, lanb, 5

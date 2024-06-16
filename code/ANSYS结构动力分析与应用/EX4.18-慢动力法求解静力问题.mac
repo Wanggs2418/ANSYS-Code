@@ -1,0 +1,52 @@
+! EX4.18-慢动力法求解静力问题 P119
+finish
+/clear
+/prep7
+l = 2.0
+k1 = 700
+k2 = 200
+f = 500
+cita = 30
+m = 10
+et, 1, combin14,,, 2
+et, 2, mass21,,, 4
+r, 1, k1
+r, 2, k2
+r, 3, m
+n, 1
+n, 2,, l
+n, 3,, 2*l
+! 默认为type=1,弹簧
+real, 1
+e, 2, 3
+real, 2
+e, 1, 2
+! 质量单元
+type, 2
+real, 3
+e, 2
+d, 1, all
+d, 3, all
+finish
+
+! 瞬态动力分析
+/solu
+antype, trans
+nlgeom, on
+outres, all, all
+autots, on
+kbc, 1  ! 阶跃
+f, 2, fx, f*cos(cita/180*acos(-1))
+f, 2, fy, f*sin(cita/180*acos(-1))
+alphad, 0.5 ! 质量阻尼
+betad, 0.24 ! 刚度阻尼
+time, 10
+nsubst, 50,, 20
+solve
+
+! 位移-时程曲线
+finish
+/post26
+nsol, 2, 2, u, x
+nsol, 3, 2, u, y
+plvar, 2, 3

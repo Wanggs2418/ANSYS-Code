@@ -1,0 +1,66 @@
+! 输出对应节点的位移到csv文件
+! 注意同时导入.db和.rst，并切换到/post26模块
+! -----------------------------------------
+! 1.将数据保存到数组中
+! -----------------------------------------
+! 节点333，337，341，345
+! 更改文件标题匹配.rst名称
+finish
+rst_name = "demo_name"
+/filename, rst_name
+/post26
+numvar, 100
+! 待提取的节点编号
+*dim, sel_node,, 4
+sel_node(1) = 333, 337, 341, 345
+! 获取节点位移变量
+var_in = 1
+*do, i, 1, 4
+    nsol, var_in+1, sel_node(i), u, x
+    nsol, var_in+2, sel_node(i), u, y
+    nsol, var_in+3, sel_node(i), u, z
+    var_in = var_in+3
+*enddo
+! 获取节点位移的维度,行数对应收敛子步的格式
+! 4个节点，每个节点的x,y,z位移,共12列
+*get, node_dim, vari, 3, nsets
+*dim, node_disp,, node_dim, 12
+! 将节点位移数据保存到数组中，方便后续传递到csv
+*do, i, 1, 12
+    vget, node_disp(1,i), i+1
+*enddo
+
+
+! -----------------------------------------
+! 2.将数组导出到.csv文件中
+! -----------------------------------------
+! 创建out_disp.mac宏文件
+*create, out_disp, mac  
+*cfopen, data_%rst_name%, csv
+! 获取数组node_disp的维度i行j列
+*get, dimx, parm, node_disp, dim, x
+*get, dimy, parm, node_disp, dim, y
+*dim, temp_par,, dimy
+! 每行通过一维数组写入,当一行写完之后，使用$换行
+! 表头
+*do, k, 1, dimy
+    temp_par(k) = k
+*enddo
+*vwrite, temp_par(1)
+(f10.3,',',$)
+*vwrite
+(' ')
+! 表格内容
+*do, i, 1, dimx
+    *do, j, 1, dimy
+        temp_par(j) = node_disp(i, j)
+    *enddo
+*vwrite, temp_par(1)
+(f10.3,',',$)
+*vwrite
+(' ')
+*enddo!!!
+*cfclos
+*end
+out_disp    ! 运行创建的宏
+! -----------------------------------------

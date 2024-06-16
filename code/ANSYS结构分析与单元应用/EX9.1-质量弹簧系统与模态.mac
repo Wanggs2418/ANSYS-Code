@@ -1,0 +1,34 @@
+! EX9.1-质量弹簧系统与模态 P372
+finish
+/clear
+/prep7
+k =1200 ! 刚度1200N/m
+m = 5   ! 质量5kg
+! 竖向振动自然频率理论解
+tnf = sqrt(k/m)/(2*acos(-1))
+et, 1, combin14
+et, 2, mass21
+r, 1, 1200
+! 缺省的keyopt参数设置
+! 质量实常数
+r, 2, 0, m, 0
+n, 1
+n, 2,, 1
+type, 1
+real, 1
+e, 1, 2
+type, 2
+real, 2
+e, 1
+d, 2, all
+
+! 求解设置
+/solu
+antype, modal
+modopt, lanb, 3
+mxpand, 3
+solve
+
+! 后处理
+/post1
+set, list

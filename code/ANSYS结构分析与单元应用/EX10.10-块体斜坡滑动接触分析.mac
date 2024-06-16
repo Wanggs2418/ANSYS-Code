@@ -1,0 +1,69 @@
+! EX10.10-块体斜坡滑动接触分析 P409
+! 斜坡为刚性体，方块为可变形体，考虑二者摩擦
+! 瞬态分析类型，很短时间内施加自重，然后沿着斜坡向下滑动
+finish
+/clear
+/prep7
+a = 50
+ref = 30    ! 斜坡角度
+lh = 1000
+*afun, deg
+k, 1
+k, 2, lh, lh*tan(ref)
+l, 2, 1
+x1 = lh-a
+y1 = x1*tan(ref)
+wpoffs, x1, y1
+wprota, ref
+blc4,,, a, a
+et, 1, plane82
+et, 2, conta172
+et, 3, targe169
+r, 1
+r, 2,,, 0.1, 0.001
+mp, ex, 1, 2e5
+mp, prxy, 1, 0.3
+mp, dens, 1, 7800e-12
+mp, mu, 2, 0.3
+aatt, 1,, 1
+esize, 5
+mshkey, 1
+amesh, all
+! 接触单元
+lsel, s,,, 2
+nsll, s, 1
+type, 2
+real, 2
+mat, 2
+esurf
+! 目标单元
+lsel, s,,, 1
+tshap, qua8 ! 8节点4变形
+type, 3
+lmesh, all
+allsel, all
+
+! 求解
+/solu
+antype, trans   ! 瞬态求解类型
+nlgeom, on
+outres, all, all
+timint, on  ! 时间积分效应
+nropt, full
+time, 1e-8
+nsubst, 2
+acel,, 9800
+solve
+time, 1.0
+deltim, 0.01,, 0.05 ! 同nsubst设置,但参数为倒数关系
+solve
+
+! 后处理
+/post1
+/dscale,, 1
+plnsol, u, sum
+antime, 50, 0.2,, 1.2, 0, 1.0
+
+
+
+

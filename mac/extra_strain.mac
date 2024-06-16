@@ -1,0 +1,49 @@
+! 提取每个荷载子步的应变
+! 读入.db和rst文件
+finish
+/filename, filename_part1 
+/post1
+allsel
+*get, sub_num, active, 0, solu, ncmss    !荷载子步数，number of substeps
+sub_num = sub_num-1
+*dim, strain_all,, sub_num, 3 ! 3列-1列：弹性应变，2列：塑性应变，3列：总应变
+*do, j, 1, sub_num
+    set, 1, j   ! 改变所在的荷载子步
+    *get, ela_strain, secr, all, epel, eqv, max
+    strain_all(j, 1) = ela_strain
+    *get, pla_strain, secr, all, eppl, eqv, max
+    strain_all(j, 2) = pla_strain
+    *get, sum_strain, secr, all, epto, eqv, max
+    strain_all(j, 3) = sum_strain
+*enddo
+
+! 导出应变数据到csv文件
+*create, strain2csv, mac
+*cfopen, strain_%filename_part1%, csv
+! i行j列
+*get, dimx, parm, strain_all, dim, x
+*get, dimy, parm, strain_all, dim, y
+*dim, temp_par,, dimy
+! 表头计数
+*do, k, 1, dimy
+    temp_par(k) = k
+*enddo
+! 指明数组开始的位置
+! 不可能写出每列字符表达式，采用$字符续航格式，当一行写完后，增加一个非$格式语句即可
+*vwrite, temp_par(1)
+(e15.5,',',$)
+*vwrite!!!
+(' ')
+! 表格内容
+*do, i, 1, dimx
+    *do, j, 1, dimy
+        temp_par(j) = strain_all(i, j)
+    *enddo!!!
+*vwrite, temp_par(1)
+(e15.5,',',$)
+*vwrite!!!
+(' ')
+*enddo!!!
+*cfclos
+*end
+strain2csv

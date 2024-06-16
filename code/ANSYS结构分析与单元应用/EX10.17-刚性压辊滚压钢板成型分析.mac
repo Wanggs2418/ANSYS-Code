@@ -1,0 +1,84 @@
+! EX10.17-刚性压辊滚压钢板成型分析 P422
+finish
+/clear
+/prep7
+r1 = 0.6
+r2 = 0.15
+h = 0.1
+l = 2.0
+et, 1, plane82
+et, 2, targe169 ! 2D接触类型
+et, 3, conta172
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+tb, bkin, 1
+tbdata, 1, 235e6, 2.1e9
+mp, mu, 2, 0.3
+r, 1
+r, 2, r1
+r, 3, r2
+! 建模
+blc4,,, l, h
+aatt, 1, 1, 1
+lsel, s, length,, h
+lesize, all, 0.01
+lsel, s, length,, l
+lesize, all, 0.025
+lsel, all
+amesh, all
+! 施加约束并求解
+nsel, s, loc, x, 0
+d, all, ux
+d, node(0, h, 0), uy
+nsel, all
+
+! 创建目标单元r1圆，与板条顶面形成接触对,r=2
+type, 2
+mat, 2
+real, 2
+nmax = ndinqr(0, 14)+1
+n, nmax, 0, h+r1
+tshap, circle
+e, nmax
+! 定义接触单元
+nsel, s, loc, y, h
+type, 3
+esurf
+
+! 直接创建目标单元r2,与板条底面形成解除对
+type, 2
+mat, 2
+real, 3
+nmax = ndinqr(0, 14)+1
+n, nmax, 0, -r2
+tshap, circle
+e, nmax
+! 在r1的圆心定义一个导向节点,r2绕r1的圆心转动
+pinode = nmax+1
+n, pinode, 0, h+r1
+tshap, pilo
+e, pinode
+! 定义接触单元
+nsel, s, loc, y, 0
+type, 3
+esurf
+allsel, all
+
+! 求解
+/solu
+nlgeom, on
+nsubst, 200,, 50
+outres, all, all
+time, 1
+d, pinode, rotz, 0.75*acos(-1)  ! 增加导向节点的转动约束并求解
+solve
+
+! 后处理
+/post1
+plnsol, u, sum
+antime, 30, 0.2, 1
+esel, s, type,, 1
+plnsol, s, eqv
+plnsol, eppl, eqv
+esel, s, real,, 2
+plnsol, cont, pres

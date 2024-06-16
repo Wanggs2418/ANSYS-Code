@@ -1,0 +1,198 @@
+! --------------------------
+! 1.原始形式,接续连接+耦合自由度设计
+! EX6.4-梁结构耦合自由度,P352
+finish
+/clear
+/prep7
+et, 1, beam3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, 0.3
+r, 1, 0.007848, 4.9087e-6, 0.1
+k, 1
+k, 2, 0, 4
+k, 3, 0, 4
+k, 4, 3, 4
+k, 5, 3, 4
+k, 6, 3, 0
+k, 7, 3, 7
+k, 8, 6, 7
+k, 9, 6, 7
+k, 10, 6, 7
+k, 11, 6, 4
+k, 12, 9, 7
+l, 1, 2
+l, 3, 4
+l, 6, 5
+l, 5, 7
+l, 7, 8
+l, 11, 10
+l, 9, 12
+! 约束
+dk, 1, all
+dk, 6, all
+dk, 11, all
+dk, 12, ux,,,, uy
+
+! 建立约束方程耦合自由度
+lesize, all,,, 8
+lmesh, all
+lsel, s,,, 2
+esll
+sfbeam, all, 1, pres, 2000
+lsel, s,,, 5, 7, 2
+esll
+sfbeam, all, 1, pres, 3000
+allsel
+! 2,3节点创建约束方程，Uy=Rotz
+ksel, s,,, 2, 3
+nslk, s
+cp, next, rotz, all
+cp, next, uy, all
+! 4,5
+ksel, s,,, 4, 5
+nslk, s
+cp, next, ux, all
+cp, next, uy, all
+! 8,9,10
+ksel, s,,, 8, 10
+nslk, s
+cp, next, ux, all
+cp, next, uy, all
+allsel
+finish
+
+! 求解和后处理
+/solu
+solve
+finish
+/post1
+pldisp, 1
+etable, mi, smisc, 6
+etable, mj, smisc, 12
+plls, mi, mj, -1
+
+! ---------------------------------
+! 2.接续连接
+! 更改连线方式
+finish
+/clear
+/prep7
+et, 1, beam3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, 0.3
+r, 1, 0.007848, 4.9087e-6, 0.1
+k, 1
+k, 2, 0, 4
+k, 3, 0, 4
+k, 4, 3, 4
+k, 5, 3, 4
+k, 6, 3, 0
+k, 7, 3, 7
+k, 10, 6, 7
+k, 11, 6, 4
+k, 12, 9, 7
+l, 1, 2
+l, 3, 4
+l, 6, 5
+l, 5, 7
+l, 7, 10
+l, 10, 12
+l, 11, 10
+! 约束
+dk, 1, all
+dk, 6, all
+dk, 11, all
+dk, 12, ux,,,, uy
+
+! 建立约束方程耦合自由度
+lesize, all,,, 8
+lmesh, all
+lsel, s,,, 2
+esll
+sfbeam, all, 1, pres, 2000
+lsel, s,,, 5, 6
+esll
+sfbeam, all, 1, pres, 3000
+allsel
+! 2,3节点创建约束方程，Uy=Rotz
+ksel, s,,, 2, 3
+nslk, s
+cp, next, rotz, all
+cp, next, uy, all
+! 4,5
+ksel, s,,, 4, 5
+nslk, s
+cp, next, ux, all
+cp, next, uy, all
+allsel
+finish
+
+! 求解和后处理
+/solu
+solve
+finish
+/post1
+
+! ---------------------------------
+! 3.长连接,脱开
+! 更改连线方式
+finish
+/clear
+/prep7
+et, 1, beam3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+r, 1, 0.3
+r, 1, 0.007848, 4.9087e-6, 0.1
+k, 1
+k, 2, 0, 4
+k, 3, 0, 4
+k, 4, 3, 4
+k, 5, 3, 4
+k, 6, 3, 0
+k, 7, 3, 7
+k, 10, 6, 7
+k, 11, 6, 4
+k, 12, 9, 7
+l, 1, 2
+l, 3, 4
+l, 6, 5
+l, 5, 7
+l, 7, 12
+l, 11, 10
+! 约束
+dk, 1, all
+dk, 6, all
+dk, 11, all
+dk, 12, ux,,,, uy
+
+! 建立约束方程耦合自由度
+lesize, all,,, 8
+lmesh, all
+lsel, s,,, 2
+esll
+sfbeam, all, 1, pres, 2000
+lsel, s,,, 5
+esll
+sfbeam, all, 1, pres, 3000
+allsel
+! 2,3节点创建约束方程，Uy=Rotz
+ksel, s,,, 2, 3
+nslk, s
+cp, next, rotz, all
+cp, next, uy, all
+! 4,5
+ksel, s,,, 4, 5
+nslk, s
+cp, next, ux, all
+cp, next, uy, all
+allsel
+finish
+
+! 求解和后处理
+/solu
+solve
+finish
+/post1

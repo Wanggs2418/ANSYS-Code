@@ -1,0 +1,75 @@
+! EX4.17-考虑恒载影响的瞬态动力分析 P117
+finish
+/clear
+/prep7
+k = 1000
+m = 10
+c = 15
+g = 9.8
+f0 = 52
+p0 = 40
+uomg = 5
+et, 1, combin14,,, 2
+et, 2, mass21,,, 4
+r, 1, k, c
+r, 2, m
+n, 1
+n, 2,, -1
+! 弹簧
+type, 1
+real, 1
+e, 1, 2
+! 质量
+type, 2
+real, 2
+e, 2
+d, 1, all
+d, all, ux
+
+! 瞬态动力分析
+/solu
+antype, trans
+trnopt, full
+outres, all, all
+autots, on
+timint, on
+! 第1荷载步，计算动力衰减稳定后的静力解
+kbc, 1  ! 阶跃
+betad, 0.075    ! 虚拟阻尼
+acel,, g
+f, 2, fy, -f0
+! 试算确定最终时间，查看动力反应是否稳定
+time, 2 
+deltim, 0.01
+solve
+! /post26
+! nsol, 2, 2, u, y
+! plvar, 2
+! prod, 3, 2,,,,,, -1
+! plvar, 3
+
+! 后续瞬态动力分析
+kbc, 0
+betad, 0.0
+nsubst, 2
+*do, it, 0.01, 3, 0.01
+    time, 2.0+it
+    f, 2, fy, -f0-p0*cos(uomg*it)
+    solve
+*enddo
+finish
+
+! 后处理
+! 位移
+/post26
+nsol, 2, 2, u, y
+plvar, 2
+prod, 6, 2,,,,,, -1
+plvar, 6
+! 加速度
+nsol, 3, 2, a, y
+plvar, 3
+! 反力
+force, total
+rforce, 4, 1, f, y
+plvar, 4

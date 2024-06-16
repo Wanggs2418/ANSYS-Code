@@ -1,0 +1,81 @@
+! EX5.6 面操作内力计算 P328
+! 类似于路径设置
+! 定义面，映射结果，运算，显示
+! 面操作仅支持3D实体单元，不支持其他单元
+
+finish
+/clear
+/prep7
+et, 1, solid95
+mp, ex, 1, 2e11
+mp, prxy, 1, 0.3
+blc4, 2, 3, 0.2, 0.3, 4
+da, 2, all
+fk, 1, fy, -2e4
+fk, 3, fy, -2e4
+fk, 3, fx, 0.8e4
+fk, 4, fx, 0.8e4
+sfa, 1, 1, pres, 1e6
+esize, 0.05
+vmesh, all
+finish
+
+! 求解设置
+/solu
+solve
+finish
+
+/post1
+wpoffs,,, 2 ! z向移动2
+! 定义面suz2,用切面cplane,3表示面的精细程度，缺省为0，值越大精细水平越高(0-3)
+sucr, suz2, cplane, 3   ! 移动工作平面，创建面SUZ2
+
+sumap, mysx, s, x
+sumap, mysy, s, y
+sumap, mysz, s, z
+sumap, mysxy, s, xy
+sumap, mysyz, s, yz
+sumap, mysxz, s, xz
+supl, suz2  ! 显示面本身
+supl, suz2, mysz
+supl, suz2, mysyz
+supl, suz2, mysxz
+supl, suz2, mysy
+supl, suz2, mysx
+supl, suz2, mys ! 矢量显示
+! 列表显示mysz项
+supr, all, mysz
+
+! sumap, demosx, s, x
+! sumap, demoy, s, y
+! sumap, demoz, s, z
+! sumap, demoxy, s, xy
+! sumap, demoyz, s, yz
+! sumap, demoxz, s, xz
+
+! supl, suz2, demosx
+! supl, suz2, demoy
+! supl, suz2, demo
+
+
+! 运算，求截面上的 Fx
+sueval, xfor, mysx, intg
+sueval, yfor, mysy, intg
+sueval, xforce, mysxz, intg ! 对mysxz积分，即Σ(Lab1×DA)
+sueval, yforce, mysyz, intg
+sueval, zforce, mysz, intg
+sueval, mya, da, sum    ! 截面面积
+sueval, myya, gcy, intg ! 关于x轴面积矩并赋给变量myya
+myxa = myya/mya ! 面积重心到x轴的距离 = 面积矩/面积
+
+! 求弯矩
+sueval, myxa, gcx, intg ! 关于y轴面积矩
+myxa = myxa/mya ! 面积重心到y轴的距离
+sucalc, szgcy, mysz, mult, gcy  ! 计算szgcy = mysz×gcy
+sueval, mx1, szgcy, intg    ! szgcy在面上积分得到mx1
+sucalc, szgcx, mysz, mult, gcx
+sueval, my1, szgcx, intg    ! szgcx = mysz×gcz
+
+! 对面积重心取矩，将内力简化到面积重心上
+mx1 = mx1 - zforce*myya
+my1 = my1 - zforce*myxa

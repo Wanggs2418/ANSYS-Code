@@ -1,0 +1,56 @@
+! EX4.02-2D表数组加载及验证 P94
+! (3+1)行×(2+1)列=12个单元格
+finish
+/clear
+/prep7
+! 3行2列
+*dim, ftx, table, 3, 2,, time, x
+! 索引值
+ftx(0,1) = 2.0
+ftx(0,2) = 6.0
+ftx(1,0) = 1.0, 3.0, 5.0
+! 元素值
+ftx(1,1) = 20.0, 30.0, 40.0
+ftx(1,2) = 60.0, 90.0, 180.0
+
+et, 1, beam3
+mp, ex, 1, 2.1e11
+mp, prxy, 1, 0.3
+mp, dens, 1, 7800
+r, 1, 1.0, 1.0, 0.5
+k, 1
+k, 2, 10
+l, 1, 2
+esize, 2
+lmesh, all
+d, 1, ux
+d, all, uy
+n1 = node(2,0,0)
+n2 = node(4,0,0)
+n3 = node(6,0,0)
+n4 = node(8,0,0)
+f, n1, fy, %ftx%
+f, n2, fy, %ftx%
+f, n3, fy, %ftx%
+f, n4, fy, %ftx%
+
+! 瞬态动力分析
+/solu
+antype, trans
+trnopt, full
+timint, on
+autots, on
+outres, all, all
+kbc, 0
+time, 7
+deltim, 0.5,, 1.0
+solve
+finish
+
+! 后处理
+/post26
+rforce, 2, n1, f, y
+rforce, 3, n2, f, y
+rforce, 4, n3, f, y
+rforce, 5, n4, f, y
+plvar, 2, 3, 4, 5

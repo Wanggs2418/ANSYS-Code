@@ -1,0 +1,44 @@
+! EX13.1B-外力代替预紧力 P479
+finish
+/clear
+/prep7
+l  = 2000
+h0 = 500
+a = 100
+br = 10
+et, 1, beam189
+mp, ex, 1, 7.2e4
+mp, prxy, 1, 0.32
+sectype, 1, beam, rect
+secdata, a, a
+! 创建几何模型
+k, 1
+k, 2, l/2
+k, 3, l
+l, 1, 2
+l, 2, 3
+lgen, 2, all,,,, h0
+l, 1, 4
+l, 3, 6
+k, 7, l/2, l/2
+latt, 1,, 1,,, 7, 1
+esize, 100
+lmesh, all
+dk, 1, ux,,,, uy, uz, rotx
+dk, 3, uy,,,, uz
+
+! 求解设置
+/solu
+fk, 2, fy, 1e4
+fk, 5, fy, -1e4
+solve
+
+! 后处理
+/post1
+! set, list
+plnsol, u, y
+prnsol, u
+prrsol
+etable, myi, smisc, 2
+etable, myj, smisc, 15
+plls, myi, myj

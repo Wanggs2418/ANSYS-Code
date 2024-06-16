@@ -1,0 +1,85 @@
+! https://www.jishulink.com/post/1894873
+
+! ---------------------
+! 1.定义刚性目标面
+! ---------------------
+! 刚性冲头的底座采用targe170
+! 将刚性目标面转换为通用接触，通过emodif
+! 刚性目标面1-sec32
+esel, s, real,, 32
+emodif, all, secnum,, 32
+emodif, all, real, gcn  ! 软件默认gcn=0,realid=0
+emodif, all, mat, gcn   ! matid=0
+esurf, all, reverse
+
+! 刚性目标面2-sec35
+esel, s, real,, 35
+emodif, all, secnum, 35
+emodif, all, real, gcn
+emodif, all, mat, gcn
+allsel, all
+
+
+! ---------------------
+! 2.使用gcgen生成通用接触面
+! ---------------------
+! 相邻面的法线夹角大于gcgen默认值20度时，则会在单元外表面生成三维面单元-conta174,每个截面表面具有唯一的截面ID
+! 基于gcgen中的edgekey=1可生成三维线接触单元-conta177
+allsel, all
+gcgen,, 20, 1   ! featureAngle=20,EdgeKey=1
+! 仅考虑顶部边缘，其余边缘删除
+esel, s, real, gcn
+esel, r, ename,, 177    ! 选择所有线接触单元
+esel, u, sec,, 95, 96   ! 共保留95,96, 109,110,111,112六个线接触单元
+esel, u, sec,, 109, 112
+edele, all, all ! 其余线性接触单元删除
+allsel, all
+keyopt, 95, 3, 0
+keyopt, 96, 3, 0
+keyopt, 109, 3, 0
+keyopt, 110, 3, 0
+keyopt, 111, 3, 0
+keyopt, 112, 3, 0
+
+! 定义接触交互，默认为无摩擦标准接触
+gcdef, auto, all, all, 100, 100 ! matid=100, realid=100
+mp, mu, 100, .1 ! 摩擦系数0.1
+tb, inter, 100,,, standard  ! keyopt(12)=0
+tbdata, 1, 0    ! keyopt(9)=0, 包括初始侵入和间隙
+
+r, 100
+rmodif, 100, 3, 1   ! fkn=1
+! 用gecdef排除可能导致的虚假接触表面
+gcdef, exclude, grip_zp_face, all_face
+gcdef, exclude, grip_zn_face, all_face
+gcdef, exclude, grip_zp_face, all_dege
+gcdef, exclude, grip_zn_face, all_dege
+gcdef, exclude, gripTop_xn_face, grip_inner_face
+gcdef, exclude. 75, 77
+gcdef, exclude, gripTop_xp_face, grip_inner_face
+gcdef, exclude, 76, 79
+allsel, all
+gcdef, list
+
+! 材料属性
+kb = 1.3e-23
+kb_eV = 8.6e-5
+Ea = 0.8
+V2 = 2.7e-29
+Q = 0.0094
+Z2 = -23
+
+tb, migr, 2 ! migration model specifications,matid=2
+tbdata, 1, Ea/kb_eV ! C1,C2,C3,C4
+tbdata, 2, V2/kb
+tbdata, 3, Q/kb_eV
+tbdata, 4, Z2/kb_eV
+
+! ---------------------
+! 3.分析和求解控制
+! ---------------------
+antype, 4   ! 非线性瞬态分析
+nlgeom, on
+trnopt, full,,,,, hht   ! time integration method，实践积分方法-hht
+tintp, 0.1
+cutcontrol, plslimit, .9    ! 引入塑性极限为缩减因子，在非线性求解收敛困难时自动减少步长

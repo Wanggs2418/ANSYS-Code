@@ -1,0 +1,73 @@
+! EX10.24-3D壳体单元模型的装配, P439
+! 壳体-壳体约束，平动和转动自由度
+finish
+/clear
+/prep7
+r = 100
+ref = 120
+h = 300
+b = 80
+l = 200
+t1 = 16
+t2 = 12
+cyl4,,, r,,, ref, h
+vdele, all
+asel, u,,, 3
+adele, all,,, 1
+asel, all
+numcmp, all
+wpoffs,,, h/2
+wprota, ref/2
+blc4,, -b/2, r+l, b
+asba, 2, 1,,, keep
+adele, 4,,, 1
+numcmp, all
+
+! 定义单元类型
+et, 1, shell181
+et, 2, conta175
+et, 3, targe170
+keyopt, 2, 2, 2
+keyopt, 2, 12, 5
+keyopt, 3, 5, 2
+
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+r, 1, t1
+r, 2, t2
+r, 3
+asel, s,,, 1
+aatt, 1, 1, 1
+esize, 15
+mshkey, 1
+amesh, all
+asel, inve
+aatt, 1, 2, 1
+asel, all
+esize, 10
+amesh, all
+
+! 接触对,MPC方法
+asel, s,,, 1
+nsla, s, 1
+type, 3
+real, 3
+esurf
+lsel, s,,, 8
+nsll, s, 1
+type, 2
+esurf
+
+! 施加约束和荷载
+lsel, s, loc, z, 0
+lsel, a, loc, z, h
+dl, all,, all
+asel, s,,, 2
+sfa, all, 1, pres, -1
+allsel, all
+
+! 求解设置
+/solu
+solve
+celist, all,,, inte
+eplot

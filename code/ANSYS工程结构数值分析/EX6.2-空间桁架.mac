@@ -63,7 +63,8 @@ lsel, a, loc, x, 20, 24
 lsel, r, tan1, y
 lsel, r, tan1, z
 cm, l2N1, line
-latt, 1, 1  ! 2A1
+lreverse, all
+latt, 1, 1   ! 2A1
 ! 3N1杆件
 lsel, s, loc, x, 4, 8
 lsel, a, loc, x, 16, 20

@@ -1,4 +1,5 @@
 ! EX10.28远距离加载 P446
+! cont174-targe170
 ! 约束面的及其用法
 finish
 /clear
@@ -10,14 +11,15 @@ p = 10000
 et, 1, solid95
 et, 2, targe170
 et, 3, conta174
-! 刚性目标节点的边界条件由用户定义
+! 导向节点约束条件由用户施加,keyopt(2)=1
 keyopt, 2, 2, 1
-! 接触算法：MPC法
-keyopt, 3, 2, 2
-keyopt, 3, 4, 1
+keyopt, 3, 2, 2 ! MPC 算法
+keyopt, 3, 4, 1 ! 荷载分配约束面,接触检测点为接触面法向节点位置
+! keyopt, 3, 4, 2 ! 刚性约束面
 keyopt, 3, 12, 5    ! 永久绑定
 mp, ex, 1, 2e5
-mp, prxy, 1, 0.0
+mp, prxy, 1, 0.3
+! mp, prxy, 1, 0.0
 
 ! 创建几何模型并划分网格
 cyl4,,, r0,,,, l0
@@ -36,16 +38,16 @@ nsla, s, 1
 type, 3 ! 接触单元
 real, 2
 esurf
-namx = ndinqr(0, 14)+1
+nmax = ndinqr(0, 14)+1
 n, nmax, b, 0, l0
 type, 2
-tshap, pilo ! 目标单元形状，导向点pilot node
+tshap, pilo
 e, nmax
 
 ! 施加荷载和约束条件，求解并查看结果
 f, nmax, fy, -p
 nsel, s, loc, z, 0
-a, all, all
+d, all, all
 allsel, all
 /solu
 solve

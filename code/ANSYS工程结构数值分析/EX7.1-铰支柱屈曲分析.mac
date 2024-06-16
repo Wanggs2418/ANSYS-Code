@@ -1,0 +1,50 @@
+! EX7.1-铰支柱屈曲分析 P415
+! 质量计算
+! mm-t-Mpa单位制
+! 长3000mm, 宽50mm, 高30mm
+! 体积V=50*30*3000=45e5mm^3
+! 密度7850e-12t/mm^3*45e5mm^3=3.5325e-2t
+finish
+/clear
+/prep7
+
+b = 30
+h = 50
+l = 3000
+e = 2.1e5
+a0 = b*h
+i1 = h*b**3/12
+i2 = b*h**3/12
+et, 1, beam3
+
+! 材料属性
+mp, ex, 1, e
+mp, prxy, 1, 0.3
+mp, dens, 1, 7850e-12
+r, 1, a0, i1, b
+
+! 创建集合模型
+k, 1
+k, 2,, l
+l, 1, 2
+dk, 1, ux,,,, uy
+dk, 2, ux
+latt, 1, 1, 1
+lesize, all,,, 20
+lmesh, all
+finish
+
+! 重力求解
+/solu
+/output, opt_file, txt
+acel,, 9.8
+solve
+/output ! 由文件返回屏幕
+
+
+! 求解设置
+/solu
+/output, opt_file, txt
+fk, 2, fy, -10
+solve
+/output ! 由文件返回屏幕

@@ -1,0 +1,94 @@
+! EX13.2-多螺栓拉紧的框架 P479
+finish
+/clear
+/prep7
+l = 2000
+h0 = 500
+a = 100
+br = 10
+nb = 4
+nf = nb+1
+et, 1, beam189
+et, 2, beam188
+mp, ex, 1, 7.2e4
+mp, prxy, 1, 0.32
+mp, ex, 2, 2.1e5
+mp, prxy, 2, 0.3
+
+sectype, 1, beam, rect
+secdata, a, a
+sectype, 2, beam, csolid
+secdata, br
+! 创建模型
+*do, i, 1, nf+1
+    k, i, (i-1)*l/nf
+*enddo
+*do, i, 1, nf
+    l, i, i+1
+*enddo
+lgen, 2, all,,,, h0
+l, 1, nf+2
+l, nf+1, 2*nf+2
+
+kmax = kpinqr(0, 14)+1
+k, kmax, l/2, l/2
+latt, 1,, 1,,, kmax, 1
+esize, 20
+lmesh, all
+
+kmax = kpinqr(0, 14)+1
+*do, i, 1, nb
+    k, kmax+2*i-1, i*l/nf
+    k, kmax+2*i, i*l/nf, h0
+    l, kmax+2*i-1, kmax+2*i
+*enddo
+lsel, u, type,, 1
+latt, 2,, 2,,, 1, 2
+lmesh, all
+
+! 施加约束及耦合自由度
+dk, 1, ux,,,, uy, uz, rotx
+dk, nf+1, uy,,,, uz
+cpintf, ux
+cpintf, uy
+cpintf, uz
+
+! 创建预紧力单元
+*do, jb, 1, nb
+    nsel, s, loc, x, jb*l/nf
+    esln, s
+    esel, r, type,, 2
+    psmesh, jb+2, bolt%jb%,, all,,, y, h0/2
+*enddo
+allsel, all
+save
+
+! 1.施加预紧力，依次拧紧并锁定
+! 1-2, 3-4, 5-6, 7-8
+/solu
+*do, jb, 1, nb
+    sload, jb+2, 9, lock, forc, 1e4, 2*jb-1, 2*jb
+*enddo
+! 求解各个荷载步
+*do, i, 1, 2*nb
+    solve
+*enddo
+*do, i, 1, nb
+    fk, i+1, fy, -10000
+*enddo
+solve
+
+! 2.同时预紧并锁定
+/solu
+*do, jb, 1, nb
+    sload, jb+2, 9, lock, forc, 1e4, 1, 2
+*enddo
+solve
+solve
+
+
+
+
+
+
+

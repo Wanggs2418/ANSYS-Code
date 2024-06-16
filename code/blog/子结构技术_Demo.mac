@@ -29,6 +29,7 @@ VDRAG,ALL,,,,,,LINE1
 LDELE,LINE1
 
 !划分网格(单元尺寸50)
+! solid185
 ET,1,185$MP,EX,1,2.1E5
 MP,PRXY,1,0.3$MP,DENS,1,1.0
 ESIZE,50$MSHKEY,1$MSHAPE,0
@@ -81,11 +82,12 @@ WPOFF,,,1.5*R$VSBW,ALL!
 WPCSYS,-1$ESIZE,50$MSHKEY,1
 TYPE,1$MAT,1$VMESH,ALL
 
-!生成多个超单元（子结构）
+!生成多个超单元子结构-et,2, matrix50
 TYPE,2
 *DO,I,1,9
 *GET,MAXN,NODE,,NUM,MAX
 !从既有子结构文件创建一个超单元
+! maxin 节点编号偏移,x偏移B*I
 SETRAN,MYZJG,,MAXN,MYZJG%I%,,,B*I
 SE,MYZJG%I%!定义这个超单元
 *ENDDO

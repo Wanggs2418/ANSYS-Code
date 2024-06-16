@@ -1,0 +1,89 @@
+! https://fscae.com/1796/
+! ANSYS 实现从位移加载变为力加载
+! 解决退出 /solu 模块后求解的不连续性
+! 注意：对于有多个节点的实体单元，则需要将支座约束处的节点写成一个数组，利用循环定义即可
+! 模型描述：两端固定的梁，l=3m, 右侧施加10mm向下的支座位移然，然后删除右侧支座约束，施加10kN竖向力
+! 支反力
+
+finish
+/clear
+/filname, disp2force
+/prep7
+et, 1, beam189
+sectype, 1, beam, rect
+secdata, 10, 20
+mp, ex, 1, 2.1e5
+mp, dens, 1, 7850e-12
+mp, prxy, 1, 0.3
+! 建模
+k, 1, 0
+k, 2, 3000
+l, 1, 2
+lesize, all,,, 10
+lmesh, all
+d, 1, all, 0
+d, 2, uy, -10
+d, 2, ux, 0,,,, uz, rotx, roty, rotz
+
+! 求解
+/solu
+antype, 0
+kbc, 0  ! 斜坡荷载
+nlgeom, on
+rescontrol, define, all, 1  ! 重启动设置,每一个荷载子步都写入
+time, 1
+allsel, all
+nsubst, 5   ! 第一个荷载子步数为5
+solve
+save
+finish
+
+! 后处理获取支座反力
+/post1
+set, 1, last
+*get, rfx, node, 2, rf, fx
+*get, rfy, node, 2, rf, fy
+*get, rfz, node, 2, rf, fz
+*get, rrx, node, 2, rf, mx
+*get, rry, node, 2, rf, my
+*get, rrz, node, 2, rf, mz
+allsel, all
+parsav, all, par_file ! 保存参数文件
+
+! 重启动分析
+/clear
+/filname, disp2force    ! 注意名称与初始分析相同
+/solu
+nsubst, 5
+antype,, rest, 1
+parres, new, par_file
+time, 2
+! 删除所有约束，施加反向作用力
+ddele, 2, all
+f, 2, fx, rfx
+f, 2, fy, rfy
+f, 2, fz, rfz
+f, 2, mx, rrx
+f, 2, my, rry
+f, 2, mz, rrz
+fcum, add   ! fcum 默认为替换，这里设置为叠加，避免后续的力替换支座反力
+f, 2, fy, -10e3
+allsel, all
+solve
+
+! 检查与后处理
+! set, list
+! 观察第一荷载步末尾与第一次分析是否对的上
+/post1
+set, 1, last
+plnsol, u, y
+etable, wj1, smisc, 3
+etable, wj2, smisc, 16
+plls, wj1, wj2
+
+set, 2, last
+plnsol, u, y
+etable, wj1, smisc, 3
+etable, wj2, smisc, 16
+plls, wj1, wj2
+

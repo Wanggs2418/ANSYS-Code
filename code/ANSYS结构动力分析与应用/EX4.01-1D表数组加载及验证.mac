@@ -1,0 +1,36 @@
+! EX4.01-表数组加载及验证 P93
+! 全约束质量点模型,将反力-荷载曲线和荷载-时间无限比较验证
+! ansys19.2未显示曲线图像但是成功求解
+finish
+/clear
+/prep7
+
+*dim, ft, table, 8, 1
+! (0,0)存放页面索引值
+! ft(0,1) = 0
+ft(1,0) = 1e-6, 1.0, 2.2, 3.0, 5.0, 5.9, 7.5, 9.0
+ft(1,1) = 0, 200, 330, 610, 610, 360, 300, 0
+et, 1, mass21
+r, 1, 1.0
+n, 1
+e, 1
+d, 1, all
+f, 1, fx, %ft%
+
+! 瞬态分析
+/solu
+antype, trans
+trnopt, full    ! 完全瞬态分析
+timint, on
+autots, on
+kbc, 0  ! 斜坡荷载
+time, 10
+deltim, 0.05,, 0.1  ! 定义时间10，积分时间步长0.05,最大不超过0.1
+solve
+finish
+
+allsel
+/post26
+rforce, 2, 1, f, x, f_demo
+prod, 3, 2,,,,,, -1
+plvar, 3

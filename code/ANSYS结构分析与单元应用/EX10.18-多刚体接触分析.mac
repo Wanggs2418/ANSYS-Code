@@ -1,0 +1,101 @@
+! EX10.18-多刚体接触分析 P423
+! 单个接触面与多个刚性目标面发生接触
+! 利用导向节点对刚性目标面施加边界条件
+finish
+/clear
+/prep7
+r1 = 40
+h = 10
+l = 1000
+x1 = -300
+y1 = -r1
+x2 = 0
+y2 = y1
+x3 = -x1
+y3 = y1
+x4 = x1
+y4 = h+r1
+x5 = -180
+y5 = y4
+x6 = -x5
+y6 = y5
+x7 = x3
+y7 = y5
+! 单元类型和实常数
+et, 1, plane82
+et, 2, targe169
+et, 3, conta172
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+tb, bkin, 1
+tbdata, 1, 235, 0.0 ! 切线模量为0
+mp, mu, 2, 0.1
+r, 1
+*do, i, 2, 8
+    r, i, r1,, 0.1
+*enddo
+
+! 创建横梁几何模型
+blc4, -l/2,, l, h
+wprota,,, 90
+asbw, all
+aatt, 1, 1, 1
+lsel, s, length,, h
+lesize, all, h/4
+lsel, s, length,, l/2
+lesize, all, h/2
+lsel, all
+amesh, all
+nsel, s, loc, x, 0
+d, all, ux
+
+! 创建接触单元，在底面创建3组接触单元
+type, 3
+mat, 2
+nsel, s, loc, y, 0
+*do, i, 2, 4
+    real, i
+    esurf
+*enddo
+! 创建接触单元，在顶面循环创建4组接触单元
+nsel, s, loc, y, h
+*do, i, 5, 8
+    real, i
+    esurf
+*enddo
+
+! 直接创建目标单元和导向节点，并对导向节点施加位移约束
+type, 2
+tpo = ndinqr(0, 14)
+*do, i, 2, 8
+    real, i
+    n, tpo+i, x%i-1%, y%i-1%
+    tshap, circle
+    e, tpo+i
+    tshap, pilo
+    e, tpo+i
+*enddo
+duy = 2*r1+h
+d, tpo+3, uy, duy
+d, tpo+6, uy, -duy
+d, tpo+7, uy, -duy
+allsel, all
+
+! 求解
+/solu
+nlgeom, on
+nsubst, 200,, 20
+outres, all, all
+time, 1
+solve
+
+! 后处理
+/post1
+/dscale,, 1
+plnsol, u, sum
+antime, 50, 0.2, 1
+esel, s, type,, 1
+plnsol, s, eqv
+plnsol, eppl, eqv
+esel, s, type,, 3
+plnsol, cont, pres

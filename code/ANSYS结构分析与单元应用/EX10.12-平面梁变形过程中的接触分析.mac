@@ -1,0 +1,85 @@
+! EX10.12-平面梁变形过程中的接触分析 P412
+! conta175可考虑壳单元或梁单元厚度的影响，通过参数tyn设置
+finish
+/clear
+/prep7
+tyn = 1
+b = 20
+h1 = 10
+h2 = 8
+l = 2000
+dt = 100
+dy = 450
+
+! 单元类型
+et, 1, beam3
+et, 2, conta175 ! 2D/3D点面接触单元
+et, 3, targe169 ! 2D目标单元
+keyopt, 2, 10, 1
+! 考虑梁或壳厚度影响时的设置
+! keyopt(4)=3, 垂直于目标面,当考虑壳或梁厚度时，用于其底面
+! 考虑厚度时,竖向坐标相差D+H1/2
+*if, tyn, eq, 1, then
+    keyopt, 2, 4, 3
+    keyopt, 2, 11, 1
+    dt = dt+h1/2
+*endif
+! 材料实常数
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+r, 1, b*h1, b*h1**3/12, h1
+r, 2, b*h2, b*h2**3/12, h2
+r, 3,,, 0.01
+! 创建模型
+k, 1
+k, 2, l
+k, 3, 0.8*l, -dt
+k, 4, 1.8*l, -dt
+l, 1, 2
+l, 3, 4
+lsel, s,,, 1
+latt, 1, 1, 1
+lsel, s,,, 2
+latt, 1, 2, 1
+lsel, all
+lesize, all,,, 35
+lmesh, all
+! 施加边界条件和约束
+dk, 1, all
+dk, 4, all
+dk, 2, uy, -dy
+type, 2
+real, 3
+e, node(l,0,0)
+lsel, s,,, 2
+esll, s
+nsll, s, 1
+nsel, r, loc, x, 0.8*l, 1.2*l
+type, 3
+esurf, all
+allsel, all
+
+! 求解设置
+/solu
+nlgeom, on
+nsubst, 100,, 40
+outres, all, all
+time, dy
+solve
+
+! 后处理
+/post1
+/dscale,, 1
+/eshape, 1
+plnsol, u, y
+
+antime, 50, 0.2, 1
+etable, m1, smisc, 6
+etable, mj, smisc, 12
+plls, mi, mj
+
+! 时间后处理
+/post26
+n1 = node(1.8*l,0,0)
+rforce, 2, n1, f, y
+plvar, 2

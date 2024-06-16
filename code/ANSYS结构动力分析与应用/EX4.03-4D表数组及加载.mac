@@ -1,0 +1,17 @@
+! EX4.03-4D表数组及加载 P95
+finish
+/clear
+*dim, pre, tab4, 6, 10, 4, 6, time, x, y, z
+*taxis, pre(1,1,1,1), 1, 1e-6, 1, 2, 3, 4, 5    ! 行
+*taxis, pre(1,1,1,1), 2, 0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 5
+*taxis, pre(1,1,1,1), 3, 0, 1, 2, 4
+*taxis, pre(1,1,1,1), 4, 0, 2, 4, 6, 8, 10
+*taxis, pre, 1, list
+
+finish
+/clear
+*dim, pre, table, 6, 6, 4, time, x, y
+*taxis, pre(1,1,1), 1, 1e-6, 1, 2, 3, 4, 5    ! 行
+*taxis, pre(1,1,1), 2, 0, 0.5, 1, 1.5, 2, 2.5
+*taxis, pre(1,1,1), 3, 0, 1, 2, 4
+*taxis, pre, 1, list

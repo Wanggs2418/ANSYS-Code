@@ -1,0 +1,70 @@
+! EX7.6-考虑恒活载的屈曲分析 P422
+! 恒载一定时，考虑活载增大到何值时结构失稳
+finish
+/clear
+/prep7
+! 定义模型参数
+r = 8
+l = 10
+b = 7
+h = 0.5
+p = 1e8 ! 活载大小
+et, 1, beam4
+mp, ex, 1, 3.3e10
+mp, prxy, 1, 0.3
+mp, dens, 1, 2600
+r, 1, b*h, b*h**3/12, h*b**3/12, b, h
+rmore,, b*h**3/3
+*afun, deg
+cita = asin(0.5*l/r)
+csys, 1
+k, 1, r, 90+cita
+k, 2, r, 90
+k, 3, r, 90-cita
+k, 10, 2*r, 90
+l, 1, 2
+l, 2, 3
+csys, 0
+dk, 1, all
+dk, 3, all
+latt, 1, 1, 1
+lesize, all,,, 10
+lmesh, all
+finish
+! 误差限值定义
+err = 1/100
+! 初始荷载缩放系数
+pmodi = 1.0
+
+! 获得静力解
+! 循环设置
+*dowhile, err
+    finish
+    /solu
+    antype, static
+    acel,, 10
+    fkdele, all, all
+    fk, 2, fy, -p*pmodi
+    pstres, on
+    solve
+    finish
+    ! 获取特征屈曲解
+    /solu
+    antype, buckle
+    ! 仅考虑一阶屈曲荷载
+    bucopt, lanb, 1
+    solve
+    ! 获取第一阶模态的屈曲荷载系数
+    *get, freq1, mode, 1, freq
+    *if, abs(freq1-1.0), le, err, then
+        *exit
+    *else
+        pmodi = pmodi*freq1
+    *endif
+*enddo
+
+! 后处理
+! 活载屈曲荷载系数1.0048
+finish
+/post1
+set, list

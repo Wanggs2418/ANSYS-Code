@@ -32,6 +32,7 @@ mshape, 1
 lsel, s, loc, z, 1, l1-1    ! 选择实体部分
 lesize, all, b/2
 vmesh, all
+
 asel, s, loc, z, 0
 da, all, all
 fk, 100, fx, 100

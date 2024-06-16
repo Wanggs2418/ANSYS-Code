@@ -33,15 +33,18 @@ amesh, all
 lsel, s, loc, x, -a/2
 lsel, a, loc, x, a/2
 sfl, all, pres, sigcr*t
+
 lsel, s, loc, x, 0
 dl, all,, ux    ! y对称轴上的约束
 lsel, s, loc, y, 0
 dl, all,, uy    ! x对称轴上的约束
+
 ! 周边z向约束
 lsel, all
 lsel, u, loc, x, 0
 lsel, u, loc, y, 0
 dl, all,, uz
+
 allsel, all
 pstres, on  ! 打开预应力开关
 solve

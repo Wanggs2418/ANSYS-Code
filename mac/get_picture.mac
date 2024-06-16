@@ -1,0 +1,79 @@
+! https://www.fangzhenxiu.com/post/1482325/
+! 实际应用内容
+! 核心代码
+! -----------------------------------------------
+/show, jpeg
+/gfile, 1200    !图片分辨率
+/cmap, temp_cmp, cmp,, save   ! 保存当前图形区设置
+/rgb, index, 100, 100, 100, 0   ! 原索引0-black,背景色设为白色
+/rgb, index, 0, 0, 0, 15    ! 原索引15-white，前景色设为黑色
+/replot
+/cmap, temp_cmp, cmp  ! 恢复之前图形区设置
+/delete, temp_cmp, cmp    ! 删除多余的文件
+/show, close
+! -----------------------------------------------
+
+
+! 内容拓展
+/show, jpeg
+jpeg, qual, 75  !缺省75
+jpeg, orient, horizontal !缺省为horiz
+jpeg, color, 2  !缺省为2，彩色输出
+jpeg, tmod, 1   !文本控制方式
+/gfile, 1200    !图片分辨率
+
+! 定义新的color mapping table
+/cmap, temp_cmp, cmp,, save   ! 保存当前图形区设置
+/rgb, index, 100, 100, 100, 0   ! 原索引0-black,背景色设为白色
+/rgb, index, 0, 0, 0, 15    ! 原索引15-white，前景色设为黑色
+/replot
+/cmap, temp_cmp, cmp  ! 恢复之前图形区设置
+/delete, temp_cmp, cmp    ! 删除多余的文件
+/show, close
+/device, vector, 0  ! vector=1为线框模式，vector=0为实体模式
+
+
+! 设置图形设备和参数
+! /show, fname, ext, vect, ncpl
+! 定向到 jpeg 文件，命名为 jobnamennn.jpg
+/show, jpeg
+/show, term ! 定向到上一次指定的图形设备，通常为屏幕
+
+
+/show, jpeg,, 0
+jpeg, qual, 75  !缺省75
+jpeg, orient, horizontal !缺省为horiz
+jpeg, color, 2  !缺省为2，彩色输出
+jpeg, tmod, 1   !文本控制方式
+/gfile, 1200    !图片分辨率
+
+! 定义新的color mapping table
+! 图片背景黑白调换
+/cmap, convert_bw, cmp,, save
+/rgb, index, 100, 100, 100, 0   ! 灰色，原索引0-black
+/rgb, index, 0, 0, 0, 15    ! 原索引15-white
+/replot
+/cmap, covnert_bw, cmp
+/delete, convert_bw, cmp
+/show, close
+/device, vector, 0
+
+! 必须提前生成荷载-位移曲线
+! 导出荷载-位移曲线的数据
+! C 语言中的描述符
+! %C for alphanumeric character data
+! %G for double precision data
+*create, scratch, gui
+*del, _p26_export
+*dim, _p26_export, table, row_num, 1
+vget, _p26_export(1, 0), 7
+vget, _p26_export(1, 1), 6
+/output, filename_m, 'csv'
+*vwrite, 'time', 'F(kN)'
+%c, %c
+*vwrite, _p26_export(1, 0), _p26_export(1, 1)
+%g, %g
+/output, term
+*end
+! 读入运行
+/input, scratch, gui
