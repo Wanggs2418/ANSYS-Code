@@ -9,7 +9,7 @@ Gitee 镜像：[ANSYS_Code](https://gitee.com/Ruliyjlu/ANSYS_Code/tree/main)
 
 ##  &#x1F375;文件说明
 
-- `doc` 中包括 ANSYS, ABAQUS, LS-DYNA 的资源书籍，大于 100MB 的采用了分卷压缩，下载完成后，直接点击 `.zip` 文件解压缩即可生成完成的文件内容；
+- `doc` 中包括 ANSYS, ABAQUS, LS-DYNA 的资源书籍，大于 100MB 的采用了分卷压缩，下载完成后，直接点击 `.zip` 文件解压缩即可生成完整的文件内容；
 - `code` 为对应书籍中的部分代码；
 - `mac` 为数据后处理的宏文件内容；
   - `array2csv_disp.mac`：导出节点位移数据到 `.csv` 文件；
