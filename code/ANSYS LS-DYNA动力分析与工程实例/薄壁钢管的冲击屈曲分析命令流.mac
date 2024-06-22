@@ -1,0 +1,67 @@
+! ANSYS18.0
+! 薄壁钢管的冲击屈曲分析命令流(SI单位制) P204
+! 使用缩减积分单元动态分析时，沙漏能<10%×内能 则求解结果可接受
+! edmp对应关键字*hourglass
+finish
+/clear
+/filname, pipe_buckling
+/title, anlsysis of pipe buckling
+
+! 1.单元类型，算法及实参
+/prep7
+et, 1, shell163
+keyopt, 1, 1, 7 ! 指定单元算法
+r, 1, 5/6, 5, 2.5e-3    ! 剪切因数推荐值5/6，沿厚度积分点数5，实参数厚度2.5mm
+! 定义材料模型
+mp, dens, 1, 7800
+mp, ex, 1, 2.07e11
+mp, nuxy, 1, 0.27
+tb, biso, 1
+tbdata, 1, 3.0e8
+tbdata, 2, 1.0e10
+! 材料沙漏控制及体积粘性
+edmp, hgls, 1, 5, 0.1, 1.5, 0.06
+
+! 2.建立几何模型
+k, 1, 0, 0, 0
+k, 2, 0, 0, 1
+lstr, 1, 2
+circle, 1, 0.15
+! 圆沿直线拖拉成圆柱面
+adrag, 2, 3, 4, 5,,, 1
+! 网格划分
+aatt, 1, 1, 0
+esize, 0.01
+amesh, all
+! 施加位移约束
+nsel, s, loc, z, -0.01, 0.01
+d, all,,,,,, all
+allsel, all
+
+! 3.定义冲击载荷数组或曲线
+nsel, s, loc, z, 0.99, 1.01
+cm, load, nodes ! 定义加载组元
+*dim, time, array, 2, 1, 1
+time(2,1,1) = 0.01  ! 时间数组
+*dim, compress, array, 2, 1, 1
+compress(2,1,1) = -0.4  ! 荷载数组
+! EDCURVE,ADD,1,TIME,COMPRESS ! 定义曲线
+! EDCURVE,PLOT,1   
+
+! 4.施加冲击荷载到节点组元load上
+edload, add, uz, 0, load, time, compress, 0
+allsel, all
+
+! 5.定义接触信息
+edcgen, assc,,, 0.1, 0.1, 0, 0, 0,,,,, 0, 10000000
+finish
+
+! 6.求解
+/solu
+time, 0.015 ! 求解时间15ms
+edopt, add, blank, lsdyna ! 结果文件输出类型
+edrst, 100  ! 结果输出步数设置,d3plot
+edhtime, 100    ! 设置时间历程后处理文件输出步数,d3thdt
+edint, 5, 4 ! 厚度方向积分点个数,shell=5,beam=4
+edenergy, 1, 1, 1, 1    ! 能量输出控制
+edwrite, lsdyna, out_k_file, k
