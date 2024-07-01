@@ -1,5 +1,6 @@
 ! ANSYS18.0
 ! 薄壁钢管的冲击屈曲分析命令流(SI单位制) P204
+! 对应 pipe_buckling.k 文件
 ! 使用缩减积分单元动态分析时，沙漏能<10%×内能 则求解结果可接受
 ! edmp对应关键字*hourglass
 finish
@@ -64,4 +65,4 @@ edrst, 100  ! 结果输出步数设置,d3plot
 edhtime, 100    ! 设置时间历程后处理文件输出步数,d3thdt
 edint, 5, 4 ! 厚度方向积分点个数,shell=5,beam=4
 edenergy, 1, 1, 1, 1    ! 能量输出控制
-edwrite, lsdyna, out_k_file, k
+edwrite, lsdyna, pipe_buckling, k

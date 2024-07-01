@@ -1,0 +1,123 @@
+! ANSYS18.0
+! 弹丸斜侵彻厚钢板问题  P222
+! 单位制：cm-g-us, 弹模,压强取1.0e11Pa
+! 对应 penetration.k 关键字文件
+! 工作环境设置,进入前处理器
+/filname, Penetration
+/title, analysis of penetration
+/prep7
+et, 1, solid164
+mp, dens, 1, 7.8
+tb, eos, 1,,, 1, 2  ! 状态方程
+mp, dens, 2, 7.8
+tb, eos, 2,,, 1, 2
+local, 11, 0, 0, 0, 0, 10   ! 坐标原点0,0,0, 绕z轴转动10度
+k, 1
+k, 2, 0, 5, 0
+k, 3, 0.75, 5, 0
+k, 4, 0.75, 0, 0
+a, 1, 2, 3, 4
+vrotat, all,,,,,, 1, 2, 180
+! 创建几何模型
+csys, 0
+block, -15, 15, -1.5, -0.3, -15, 0  ! 靶体
+! 网格划分
+lsel, s, line,, 1, 3, 2
+lsel, a, line,, 6, 11, 5
+lesize, all,,, 30
+lsel, all
+lsel, s, line,, 8, 10, 1
+lsel, a, line,, 12, 14, 1
+lsel, a, line,, 2, 4, 2
+lesize, all,,, 6
+lsel, all
+vsel, s, loc, y, -0.2, 10
+vatt, 1,, 1, 0
+vmesh, all
+vsel, all
+! 利用工作平面切分靶体
+! wpstyl, 0.05, 1, -5, 5, 0.003, 0, 0,, 5 ! 主要用于GUI网格大小设置,命令流中可省略
+wpoffs, 0, 0, -2
+vsbw, 3
+wpoffs, 3, 0, 0
+wprota,,, -90
+vsel, s, volu,, 4, 5,, 1
+cm, v1, volu
+vsbw, v1
+vsel, all
+wpoffs, 0, 0, 6
+vsel, s, volu,, 3, 8, 5, 1
+cm, v2, volu
+vsbw, v2
+vsel, all
+lsel, s, line,, 15, 29, 7
+lsel, a, line,, 19, 20, 1
+lsel, a, line,, 55, 59, 4
+lesize, all,,, 8    ! div=8
+lsel, all
+lsel, s, line,, 61, 66, 1
+lesize, all,,, 40
+lsel, all
+lsel, s, line,, 35, 38, 1
+lsel, a, line,, 57, 60, 3
+lsel, a, line,, 50, 51, 1
+lesize, all,,, 15   ! div=15
+lsel, all
+lsel, s, line,, 30, 32, 1
+lsel, a, line,, 27, 28, 1
+lsel, a, line,, 39, 41, 2
+lsel, a, line,, 54
+lesize, all,,, 25   ! div=25
+lsel, all
+lsel, s, line,, 43, 48, 1
+lsel, a, line,, 16, 18, 2
+lsel, a, line,, 56, 58, 2
+lsel, a, line,, 21
+lsel, a, line,, 34
+lesize, all,,, 25   ! div=25
+! 划分靶体
+vsel, s, loc, y, -0.2, -2.0
+vatt, 2,, 1, 0
+vmesh, all
+allsel, all
+
+! 建立part
+edpart, create
+partsel, 'plot' ! 绘制part
+
+! 定义接触信息
+edcgen, ests, 1, 2, 0.15, 0.1
+
+! 定义对称的边界条件
+nsel, s, loc, z, -0.1, 0.1
+d, all, uz
+allsel, all
+! 定义靶板周边约束条件
+nsel, s, loc, x, -14.9, -15.1
+nsel, a, loc, x, 14.9, 15.1
+nsel, a, loc, z, -14.9, -15.1
+d, all, all
+allsel, all
+
+! 定义弹丸的初始速度
+edpv, vgen, 1, 0.0174, -0.0985, 0
+finish
+
+! 求解设置
+/solu
+edenergy, 1, 1, 1, 1
+edbvis, 1, 0.06 ! 设置人工体积粘性参数
+edcts, 0, 0.6   ! 时间步长缩放因子
+time, 100   ! 求解时间
+! 结果文件输出步数
+edrst, 50
+edhtime, 1
+edopt, add, blank, lsdyna   ! 结果文件输出类型
+edwrite, lsdyna, penetration, k
+
+!  注意，在提交求解之前，需要对关键字文件进行修改或添加一些关键字段
+! (1)材料模型的参数字段
+! *MAT_JOHNSON_COOK 和 *EOS_GRUNEISEN
+! (2)接触刚度的关键字
+! *CONTACT_ERODING_SURFACE_TO_SURFACE
+! *CONTROL_CONTACT

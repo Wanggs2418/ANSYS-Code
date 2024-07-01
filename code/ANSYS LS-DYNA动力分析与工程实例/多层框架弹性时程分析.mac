@@ -1,5 +1,6 @@
 ! ansys18.0-ANSYS/LS-DYNA模块
 ! 多层框架结构的弹性时程分析 P237
+! 对应 building.k 关键字文件
 finish
 /clear
 /filname, building
