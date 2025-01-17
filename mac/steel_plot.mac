@@ -1,0 +1,24 @@
+/post1
+set, list
+/dscale, 1, 10
+
+! 1.切面设置，查看中面
+/cplane, 1  
+wprota,,, 90
+/type, 1, sect
+/triad, off
+
+! 2.单元染色区分,查看中面
+/eshape, 1
+/dscale, 1, 10
+allsel
+cmsel, s, tube_bot
+esla
+/color, elem, red, all
+cmsel, s, tube_top
+esla
+/color, elem, blue, all
+! 去除上半段
+allsel
+cmsel, u, tube_top
+esla

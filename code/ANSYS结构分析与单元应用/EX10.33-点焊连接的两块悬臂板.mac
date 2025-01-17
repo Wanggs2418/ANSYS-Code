@@ -1,0 +1,92 @@
+! EX10.33-点焊连接的两块悬臂板 P453
+finish
+/clear
+/prep7
+t1 = 10
+t2 = 20
+l = 900
+b = 300
+et, 1, shell63
+et, 2, conta173
+et, 3, targe170
+keyopt, 2, 5, 1 ! 用自动cnof闭合间隙
+keyopt, 2, 11, 1    ! 考虑壳体厚度影响
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+mp, mu, 2, 0.25
+r, 1, t1    ! 壳体厚度
+r, 2, t2    ! 壳体厚度
+r, 3,,, 0.1 ! fkn-法向接触刚度系数
+
+! 创建模型并划分shell单元
+/view, 1, 1, 1, 1
+/angle, 1, -120, zs, 1
+/eshape, 1
+blc4,,, l, b
+wpoffs,,, -(t1+t2)/2
+blc4,,, l, b
+asel, s,,, 1
+aatt, 1, 1, 1
+esize, 50
+mshkey, 1
+amesh, all
+asel, s,,, 2
+aatt, 1, 2, 1
+esize, 40
+amesh, all
+asel, all
+
+! 创建接触对
+asel, s,,, 1
+nsla, s, 1
+type, 2
+real, 3
+mat, 2
+esurf,, bottom  ! 前面设定中keyopt(11)=1，考虑壳体厚度
+asel, s,,, 2
+nsla, s, 1
+type, 3 ! 目标面
+esurf
+allsel, all
+
+! 创建点焊节点1-4,半径10
+n1 = ndinqr(0,14)+1
+n2 = n1+1
+n3 = n2+1
+n4 = n3+1
+n, n1, l/3, b/3
+n, n2, l/3, 2*b/3
+n, n3, 2*l/3, b/3
+n, n4, 2*l/3, 2*b/3
+! 创建点焊基集
+! 名称-sw1，半径-10，定义被焊面(组件名/面编号)-1,2，定义的第一个点焊节点snd1
+swgen, sw1, 10, 1, 2, n1    ! 生成两个接触面-bond always
+swgen, sw2, 10, 1, 2, n2
+swgen, sw3, 10, 1, 2, n3
+swgen, sw4, 10, 1, 2, n4
+! etlist    ! element type
+! swlist
+
+! 施加边界条件及荷载
+lsel, s, loc, x, 0
+dl, all,, all
+asel, s,,, 1
+sfa, all, 2, pres, 0.05
+allsel, all
+
+! 求解
+/solu
+solve
+eplot
+celist,,,, inte
+
+/post1
+plnsol, u, sum
+plnsol, s, x
+esel, s, type,, 2   ! conta173
+plnsol, cont, pres
+plnsol, cont, stat
+plnsol, cont, stot  ! total pres=pres+friction
+esel, s, type,, 1   ! shell63
+/eshape, 1
+plnsol, s, x

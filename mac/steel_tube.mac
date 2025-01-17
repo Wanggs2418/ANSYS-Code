@@ -1,0 +1,138 @@
+! ansys19.2
+! coding:utf-8
+! 76mm×3.5mm×1000mm
+! 钢管特征屈曲分析
+! ---------------------------------------------
+finish
+/clear
+/filename, steel_tube
+/title, steel_tube_corrosion
+/uis, msgpop, 3     !关闭弹窗警告
+keyw, pr_sgvof, 1   !关闭verify弹窗，并自动确认
+/prep7
+/units, mpa !定义单位形式,mm,kg,s
+*afun, deg  !定义角度单位为度
+
+! 尺寸设定
+len = 1000
+len_mid = 200
+len_bot = (len-len_mid)/2
+len_top = len_bot
+d1 = 76 ! 外侧直径
+t1 = 3.5
+t2 = 2.8
+d2 = d1-2*t1 !内侧直径
+! d0 = (d1+d2)/2 !平均直径,用于壳单元设置
+d0 = 34.5   ! 截面平均半径
+refl = 360 !旋转角度
+
+! 单元类型和本构关系
+et, 1, shell181
+et, 2, mass21
+keyopt, 2, 3, 0 ! ux,uy,uz,rotz,roty,rotx
+r, 1, t1
+r, 2, t2
+r, 3, 1e-6
+mp, ex, 1, 2.0e5
+mp, prxy, 1, 0.3
+tb, biso, 1 !双线性等向强化
+tbdata, 1, 342, 2.06e5*0.02   !赋予属性,屈服应力和 Tang Mod
+
+! 几何建模
+k, 1, d0
+k, 2, d0,, len
+l, 1, 2
+! 旋转轴
+k, 100
+k, 101,,, len
+arotat, 1,,,,,, 100, 101
+! 划分3段
+csys, 0
+wpcsys, -1
+wpoffs,,, len_bot
+asbw, all
+wpoffs,,, len_mid
+asbw, all
+! 定义3部分组件
+asel, s, loc, z, 0, len_bot
+cm, tube_bot, area
+asel, s, loc, z, len_bot, len_bot+len_mid
+cm, tube_mid, area
+asel, s, loc, z, len_bot+len_mid, len
+cm, tube_top, area
+
+
+! 网格划分
+! 轴方向网格尺寸
+allsel, all
+lsel, s, tan1, z
+lesize, all, 5
+lsel, inve
+lesize, all, 5
+! tube_bot段划分
+cmsel, s, tube_bot
+aatt, 1, 1, 1
+mshkey, 1
+amesh, all
+! tube_mid段划分
+cmsel, s, tube_mid
+aatt, 1, 2, 1
+mshkey, 1
+amesh, all
+! tube_top段划分
+cmsel, s, tube_top
+aatt, 1, 1, 1
+mshkey, 1
+amesh, all
+
+! 设置约束
+allsel, all
+*get, node_max, node, 0, num, maxd   !获取最大节点编号
+node_bot = node_max+1
+node_top = node_max+2
+n, node_bot
+n, node_top,,, len
+type, 2
+real, 3
+e, node_bot
+e, node_top
+
+
+! 建立刚域
+allsel, all
+nsel, r, loc, z, 0
+cerig, node_bot, all, all
+allsel, all
+nsel, r, loc, z, len
+cerig, node_top, all, all
+! 施加约束
+allsel
+d, node_bot, ux,,,,, uy, uz
+d, node_bot, rotz,,, roty
+d, node_top, ux,,,,, uy
+d, node_top, rotz,,, roty
+
+! 静力分析，单位位移
+/solu
+allsel  
+time, 1
+d, node_top, uz, -1
+nsubst, 50
+pstres, on
+solve
+finish
+
+! 特征值屈曲分析
+/solu
+antype, buckle  !特征值屈曲
+bucopt, lanb, 50 !采取分块兰索斯法，特征值数目为6阶
+mxpand, 50   !扩展模态
+outres, all, all
+solve
+finish
+
+! 后处理
+! /post1
+! set, list
+/dscale, 1, 20  ! 变形放大10倍
+! set, 1, 1

@@ -1,0 +1,170 @@
+! http://www.1cae.com/a/ansys/55/ansys-9816.htm
+! 子结构技术应用实例
+! 尺寸:20×40×2
+! 边界：一端固支,另一端承受法向载荷
+! 模型：中间切断，前一部分为普通有限元模型，后一部分为超单元模型，二者组装为一个整体
+! --------------------------------------------
+! 方法1：全部使用普通壳体单元建模，作为对比组
+FINISH
+/CLEAR,NOSTART
+/FILNAME,SUB_STRUCTURAL
+/PREP7
+SMRT,OFF
+!定义单元类型：壳单元
+ET,1,shell63
+R,1,2
+!定义材料类型
+MP,EX,1,201000
+MP,PRXY,1,0.3
+MP,DENS,1,7.8E-9
+!建立几何模型
+K,1,0,0,0
+K,2,20,0,0
+K,3,20,20,0
+K,4,20,40,0
+K,5,0,40,0
+K,6,0,20,0
+A,1,2,3,6
+A,6,3,4,5
+! 网格划分
+lsel,s,loc,y,20
+lsel,a,loc,x,0
+lesize,all,,,20
+allsel,all
+type,1
+mat,1
+mshkey,1
+mshape,0,2D
+amesh,all
+/eshape,1
+eplot
+save,se_all,db
+! 施加约束并求解
+/solu
+antype,static
+nsel,s,loc,y,0
+d,all,all,0
+allsel,all
+nsel,s,loc,y,40
+f,all,fz,5
+allsel,all
+solve
+finish
+! 后处理
+/post1
+pldisp
+plnsol,s,eqv
+plnsol,u,z
+finish
+
+! 方法2：上半部分普通壳体单元+下半部分超单元
+! --------------------------------------------
+!2.1-首先生成超单元GEN.sub
+finish
+/CLEAR,NOSTART
+/FILNAME,GEN
+/PREP7
+SMRT,OFF
+!定义单元类型
+ET,1,shell63
+R,1,2
+!定义材料类型
+MP,EX,1,201000
+MP,PRXY,1,0.3
+MP,DENS,1,7.8E-9
+! 几何模型
+K,1,0,0,0
+K,2,20,0,0
+K,3,20,20,0
+K,4,0,20,0
+A,1,2,3,4
+LESIZE,ALL,,,20
+allsel,all
+! 网格划分
+type,1
+mat,1
+mshkey,1
+mshape,0,2D
+amesh,all
+/eshape,1
+eplot
+! 子结构分析
+/SOLU
+ANTYPE,SUBST
+SEOPT,GEN   ! 子结构求解控制，超单元名称GEN
+! 施加约束
+NSEL,S,LOC,Y,0
+D,ALL,ALL,0
+ALLSEL,ALL
+NSEL,S,LOC,Y,20
+M,ALL,ALL             ! 建立主自由度，在中间连接的部位建立主自由度
+ALLSEL,ALL
+SAVE
+SOLVE
+FINISH
+
+! ----------------------------------------------
+!2.2-使用超单元，并和上半部分普通单元耦合，整体求解
+!建立模型-上半部分普通单元
+/CLEAR,NOSTART
+/FILNAME,USE
+/PREP7
+SMRT,OFF
+ET,1,shell63
+R,1,2
+!定义材料类型
+MP,EX,1,201000
+MP,PRXY,1,0.3
+MP,DENS,1,7.8E-9
+! 建立模型
+K,1,0,20,0
+K,2,20,20,0
+K,3,20,40,0
+K,4,0,40,0
+A,1,2,3,4
+LESIZE,ALL,,,20
+allsel,all
+! 划分网格
+type,1
+mat,1
+mshkey,1
+mshape,0,2D
+amesh,all
+/eshape,1
+eplot
+save
+! 下半部分使用超单元
+ET,2,MATRIX50   ! 超单元
+TYPE,2
+SETRAN,GEN,,450,GEN_1   ! 新建超单元GEN_1，节点编号从450开始
+se,GEN_1 
+eplot
+! 超单元和普通单元耦合
+nsel,s,loc,y,20
+nplot
+cpintf,all                             ! 耦合超单元和普通有限元单元相连接部位的节点
+allsel,all
+/eshape,1
+eplot
+finish
+! 整体求解
+/SOLU
+ANTYPE,STATIC
+NSEL,S,LOC,Y,40
+F,ALL,FZ,5
+ALLSEL,ALL
+save
+SOLVE
+FINISH
+
+! ----------------------------------------------
+!2.3-超单元扩展，对超单元内部的结果进行拓展求解
+/CLEAR,NOSTART
+/FILNAME,GEN
+RESUME
+/SOLU
+EXPASS,ON                                
+SEEXP,GEN_1,USE                          ! 扩展超单元的结果
+EXPSOL,1,1
+SOLVE
+FINISH

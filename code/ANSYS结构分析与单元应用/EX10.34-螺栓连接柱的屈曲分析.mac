@@ -1,0 +1,108 @@
+! EX10.34-螺栓连接柱的屈曲分析 P454
+finish
+/clear
+/prep7
+t1 = 10
+t2 = 20
+h = 800
+b = 200
+et, 1, solid45
+et, 2, conta173 ! 3D4节点的面面接触单元
+et, 3, targe170
+keyopt, 2, 5, 1 ! 自动cnof闭合间隙
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+blc4,,, b, h, t2
+wpoffs,,, t2
+blc4,,, b, h, t1
+vgen, 2, 2,,,,, -(t1+t2)
+vatt, 1,, 1
+esize, t1/2
+lsel, s, length,, b
+lesize, all, 2*t1
+lsel, s, length,, h
+lesize, all, 3*t1
+lsel, all
+vmesh, all
+
+! 设定接触
+real, 2
+vsel, s,,, 1
+aslv, s
+asel, r, loc, z, 0
+nsla, s, 1
+type, 2 ! 接触面
+esurf
+vsel, s,,, 3
+aslv, s
+asel, r, loc, z, 0
+nsla, s, 1
+type, 3
+esurf
+! 接触
+real, 3
+vsel, s,,, 1
+aslv, s
+asel, r, loc, z, t2
+nsla, s, 1
+type, 2
+esurf
+vsel, s,,, 2
+asel, r, loc, z, t2
+nsla, s, 1
+type, 3
+esurf
+allsel, all
+
+! 施加荷载和边界
+nsel, s, loc, y, 0
+d, all, all
+vsel, s,,, 1
+nslv, s, 1
+nsel, r, loc, y, h
+*get, ntnod, node,, count
+f, all, fy, -1/ntnod
+allsel, all
+! 假定nbo个螺栓连接(r=20),梁单元采用beam188
+nbo = 3
+et, 4, beam188  
+sectype, 1, beam, csolid
+secdata, 20 ! r=20
+! 梁单元,2*nbo个节点
+type, 4
+mat, 1
+! 节点编号
+secnum, 1
+swn1 = ndinqr(0,14)+1
+*do, i, 2, nbo*2
+    swn%i% = swn%i-1%+1
+*enddo
+! 创建焊接点
+*do, i, 1, nbo
+    yi = h/(nbo+1)*i
+    n, swn%2*i-1%, b/2, yi, t1+t2
+    n, swn%2*i%, b/2, yi, -t1
+*enddo
+! 创建点焊集,点焊半径r=20,搜索半径40
+*do, i, 1, nbo
+    swgen, sw%i%, 20, 8, 13, swn%2*i-1%, swn%2*i%, 40
+*enddo
+
+! 求解设置
+/solu
+antype, static
+pstres, on
+solve
+finish
+
+! 屈曲特征求解
+/solu
+antype, buckle
+bucopt, lanb, 5
+mxpand, 5
+solve
+
+/post1
+set, list
+set, 1, 1
+pldisp

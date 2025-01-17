@@ -1,0 +1,52 @@
+! EX7.3-周边固支板的静力分析 P260
+finish
+/clear
+/prep7
+a = 3000
+b = 2000
+t = 20
+q = 0.4
+em = 2.1e5
+boss = 0.3
+shellFy = 235
+! et, 1, shell63    ! 弹性壳单元
+et, 1, shell181
+mp, ex, 1, em
+mp, prxy, 1, boss
+tb, biso, 1 !双线性等向强化
+tbdata, 1, shellFy, em*0.02
+r, 1, t
+blc4,,, a, b
+mshkey, 1
+esize, 50
+amesh, all
+! 长边约束
+nsel, s, loc, y, 0
+d, all, all
+allsel
+nsel, s, loc, y, b
+d, all, all
+sfa, all, 1, pres, q*10
+
+! 求解设置
+/solu
+nlgeom, 1
+time, 1
+nsubst, 50
+solve
+
+! 后处理
+/post1
+pldisp, 1
+plnsol, u, z
+! 板中心节点号及SY
+midn0 = node(a/2, b/2, 0)
+*get, midsy, node, midn0, s, y
+miduz = uz(midn0)
+
+! 时间曲线
+/post26
+numvar, 50    ! defa=10
+midn0 = node(a/2, b/2, 0)
+nsol, 2, midn0, u, z, Uz_MidNode
+plvar, 2

@@ -1,0 +1,116 @@
+! EX6.4-等直杆的扭转分析 P199
+! 实体单元施加扭矩和模拟边界条件
+! 实体单元无转动自由度，通过引入具有转动自由度的单元施加扭矩或力矩
+! 或用力偶直接施加集中力
+finish
+/clear
+/prep7
+a = 100
+b = 60
+l = 1000
+pi = acos(-1)
+m = 99e5*pi
+sigt = 2*m/(pi*a*b*b)   ! 定义扭矩及理论最大剪应力
+g = 2.1e5/(2*(1+0.3))  ! 定义剪切模量
+wmax = (a*a-b*b)*m/(2*pi*a*a*b*b*g)  ! 定义理论最大纵向位移
+! 单元类型及材料性质
+et, 1, solid95
+mp, ex, 1, 2.1e5
+mp, prxy, 1, 0.3
+cyl4,,, a
+arscale, 1,,,, b/a,,,, 1    ! 圆面生成椭圆面
+voffst, 1, l    ! 生成椭圆柱
+! 切分
+wprota,, 90
+vsbw, all
+wprota,,, 90
+vsbw, all
+wpcsys, -1
+esize, 30
+mshkey, 1
+mshape, all
+lsel, s, length,, l
+lesize, all, l/20
+lsel, all
+vmesh, all
+! 施加固定端约束，保存模型
+asel, s, loc, z, 0
+da, all, all
+asel, all
+save
+
+! 方法1.引入质量单元施加扭矩
+et, 2, mass21
+keyopt, 2, 3, 0 ! uxyz,rotxyz
+r, 2, 1e-6
+type, 2
+real, 2
+endcent = node(0,0,l)
+e, endcent
+nsel, s, loc, z, l
+cerig, endcent, all, uxyz
+f, endcent, mz, m   ! 截面中心点施加扭矩
+allsel, all
+
+! 方法2.利用MPC184单元，创建多个单元形成刚性区
+resume
+/prep7
+et, 2, mpc184
+keyopt, 2, 1, 1
+*get, maxnode, node,, num, max
+maxnode = maxnode + 1
+nsel, s, loc, z, l
+nsel, u,,, node(0,0,l)
+*get, numnode, node,, count
+*get, inode, node,, num, min
+n, maxnode,,, l
+type, 2
+e, maxnode, inode   ! 新建节点和最小节点形成MPC184单元
+! 循环创建MPC184单元
+*do, i, 2, numnode
+    inode = ndnext(inode)
+    e, maxnode, inode
+*enddo
+f, maxnode, mz, m
+allsel, all
+
+! 方法3.引入BEAM4单元，建立约束方程
+resume
+/prep7
+et, 2, beam4
+r, 2, 1e8, 1e8, 1e8, 1, 1
+*get, maxnode, node,, num, max
+endcent = node(0,0,l)
+n, maxnode+1, 0, 0, 1.5*l
+type, 2
+real, 2
+e, maxnode+1, endcent   ! 中心点和1.5l处中心点形成BEAM4单元
+nsel, s, loc, z, l
+cerig, endcent, all, uxyz   ! 同引入质量单元类似
+f, endcent, mz, m
+allsel, all
+
+! 方法4.直接施加力偶（最粗糙的方法，产生集中力）
+resume
+/prep7
+p = m/(2*(a+b))
+f, node(-a,0,l), fy, -p
+f, node(a,0,l), fy, p
+! 施加另一对集中力
+f, node(0,-b,l), fx, p
+f, node(0,b,l), fx, -p
+
+! 求解
+/solu
+solve
+
+! 后处理
+/post1
+plnsol, s, xz   ! sxz剪应力云图
+plnsol, s, yz
+plnsol, s, z
+nsel, s, loc, z, 2*a, l-2*a ! 根据圣维南原理，端部各去掉一个梁高范围
+esln
+plnsol, s, z
+plnsol, u, z
+plnsol, s, xz
